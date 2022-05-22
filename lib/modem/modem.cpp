@@ -1,4 +1,4 @@
-//#define DEBUGLOG_RELEASE_MODE
+//#define DEBUGLOG_DISABLE_LOG
 #include <DebugLog.h>
 #include "config.h"
 #include "modem.h"
@@ -11,7 +11,6 @@ extern Modem* modem;
 Modem::Modem(SX1278* r, void (*send)(uint8_t* data, size_t len)): radio(r), send(send) {
     persister = new ConfigPersister();
     state = new ModemState();
-    executor = new CommandExecutor(state, persister);
 }
 
 ModemConfig* Modem::config() {
@@ -32,6 +31,8 @@ void Modem::setup() {
         error(F("LoRa initialization"), err);
         persister->reset();
         setup();
+    } else {
+        LOG_INFO(F("Radio initialized"));
     }
 }
 
@@ -41,11 +42,11 @@ void Modem::loop() {
         int64_t now = millis();
         if (now - state->last_receive_time > RX_TIMEOUT_MS) {
             stopReceive();
-            LOG_DEBUG(F("Receive timeout"));
+            LOG_INFO(F("Receive timeout"));
             flushOutput();
         } else {
             if(state->output_len >= 0.9*BUFFER_SIZE) {
-                LOG_DEBUG(F("Buffer overflow"));
+                LOG_INFO(F("Buffer overflow"));
                 flushOutput();
             }
             return;
@@ -84,10 +85,9 @@ void Modem::reset() {
 
 void Modem::transmit(uint8_t* data, size_t len) {
     Packet packet = {config()->address, state->address_destination};
-    memcpy(packet.payload, data, len);
-    memcpy(state->buffer, &packet, len + SERVICE_SIZE);
-    LOG_DEBUG(F("Transmit"), len + SERVICE_SIZE);
-    int16_t result = radio->transmit(state->buffer, len + SERVICE_SIZE);
+    LOG_INFO(F("Transmit"), (char*)&packet);
+    int16_t result = radio->transmit((uint8_t*)&packet, len + SERVICE_SIZE);
+    LOG_INFO(F("Transmitted"));
     if (result != ERR_NONE) {
         error(F("Transmit"), result);
     }
@@ -100,7 +100,7 @@ void Modem::transmitAdvertisementPacket() {
     memcpy(packet.prefix, ADV_PREFIX, ADV_PREFIX_SIZE);
     memcpy(state->buffer, &packet, sizeof(AdvertisementPacket));
     radio->transmit(state->buffer, sizeof(AdvertisementPacket));
-    LOG_DEBUG(F("Transmit adv packet"));
+    LOG_INFO(F("Transmit adv packet"));
 }
 
 void Modem::receive() {
@@ -109,7 +109,7 @@ void Modem::receive() {
         int16_t result = radio->readData(state->buffer, SX127X_MAX_PACKET_LENGTH);
         if (result == ERR_NONE) {
             size_t len = radio->getPacketLength();
-            LOG_DEBUG(F("Received"), len, F("bytes in"), (int)(receive_time - state->last_receive_time), F("ms"));
+            LOG_INFO(F("Received"), len, F("bytes in"), (int)(receive_time - state->last_receive_time), F("ms"));
             if (!receiveAdvertisementPacket(len)) {
                 Packet packet = {};
                 memcpy(&packet, state->buffer, len);
@@ -147,7 +147,7 @@ void Modem::startReceive() {
 void Modem::stopReceive() {
     state->receive = false;
     radio->clearDio0Action();
-    LOG_DEBUG(F(""));
+    LOG_INFO(F(""));
 }
 
 bool Modem::receiveAdvertisementPacket(size_t len) {
@@ -155,7 +155,7 @@ bool Modem::receiveAdvertisementPacket(size_t len) {
         if (strncmp((char *)state->buffer, ADV_PREFIX, ADV_PREFIX_SIZE) == 0) {
             AdvertisementPacket packet = {};
             memcpy(&packet, state->buffer, sizeof(AdvertisementPacket));
-            LOG_DEBUG(F("Receive adv packet. Address: "), packet.address, F(", period: "), packet.adv_period_millis);
+            LOG_INFO(F("Receive adv packet. Address: "), packet.address, F(", period: "), packet.adv_period_millis);
             state->routing_table.addRoute(packet.address, packet.adv_period_millis, radio->getRSSI());
             return true;
         }

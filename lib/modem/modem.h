@@ -1,7 +1,6 @@
 #ifndef MODEM_H
 #define MODEM_H
 #include <RadioLib.h>
-#include "commands.h"
 #include "config.h"
 #include "state.h"
 
@@ -31,18 +30,17 @@ class Modem {
         void loop();
         void serviceLoop();
         void transmit(uint8_t* data, size_t len);
+        void transmitAdvertisementPacket();
         void reset();
         ModemConfig* config();
         ModemState* state;
         ConfigPersister* persister;
     private:
         SX1278* radio;
-        CommandExecutor* executor;
         void (*send)(uint8_t* data, size_t len);
         void error(const __FlashStringHelper* msg, int16_t code);
         void receive();
         bool receiveAdvertisementPacket(size_t len);
-        void transmitAdvertisementPacket();
         void startReceive();
         void flushOutput();
         void stopReceive();

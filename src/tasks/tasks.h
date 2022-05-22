@@ -1,7 +1,9 @@
 #ifndef TASKS_H
 #define TASKS_H
 
-#include "blink_task.h"
-#include "message_handler_task.h"
+#include "message.h"
+#include "util_tasks.h"
+#include "message_tasks.h"
+#include "modem_tasks.h"
 
 #endif
