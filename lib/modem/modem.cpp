@@ -33,6 +33,7 @@ void Modem::setup() {
         setup();
     } else {
         LOG_INFO(F("Radio initialized"));
+        startReceive();
     }
 }
 
@@ -83,27 +84,36 @@ void Modem::reset() {
     setup();
 }
 
-void Modem::transmit(uint8_t* data, size_t len) {
+void Modem::transmitPacket(uint8_t* data, size_t len) {
     Packet packet = {config()->address, state->address_destination};
-    LOG_INFO(F("Transmit"), (char*)&packet);
-    int16_t result = radio->transmit((uint8_t*)&packet, len + SERVICE_SIZE);
-    LOG_INFO(F("Transmitted"));
-    if (result != ERR_NONE) {
-        error(F("Transmit"), result);
-    }
+    memcpy(packet.payload, data, len);
+    transmit((uint8_t*)&packet, len + SERVICE_SIZE);
     state->network.transmit += len;
-    delay(TX_DELAY_MS);
 }
 
 void Modem::transmitAdvertisementPacket() {
     AdvertisementPacket packet = {{}, config()->address, config()->adv_period_millis};
     memcpy(packet.prefix, ADV_PREFIX, ADV_PREFIX_SIZE);
-    memcpy(state->buffer, &packet, sizeof(AdvertisementPacket));
-    radio->transmit(state->buffer, sizeof(AdvertisementPacket));
-    LOG_INFO(F("Transmit adv packet"));
+    transmit((uint8_t*)&packet, sizeof(AdvertisementPacket));
+    LOG_INFO(F("Adv packet sent"));
 }
 
-void Modem::receive() {
+void Modem::transmit(uint8_t* data, size_t len) {
+    state->receive = false;
+    state->is_transmitted = false;
+    LOG_INFO(F("Transmit"), (char*)data);
+    radio->setDio0Action([](){
+        if (!modem->state->receive) {
+            modem->state->is_transmitted = true;
+        }
+    });
+    int16_t result = radio->startTransmit(data, len);
+    if (result != ERR_NONE) {
+        error(F("Transmit"), result);
+    }
+}
+
+/*void Modem::receive() {
     if (state->is_received) {
         int64_t receive_time = millis();
         int16_t result = radio->readData(state->buffer, SX127X_MAX_PACKET_LENGTH);
@@ -131,7 +141,7 @@ void Modem::receive() {
         state->is_received = false;
         radio->startReceive();
     }
-}
+}*/
 
 void Modem::startReceive() {
     state->last_receive_time = millis();
@@ -150,13 +160,13 @@ void Modem::stopReceive() {
     LOG_INFO(F(""));
 }
 
-bool Modem::receiveAdvertisementPacket(size_t len) {
+bool Modem::receiveAdvertisementPacket(uint8_t* buffer, size_t len) {
     if (len == sizeof(AdvertisementPacket)) {
-        if (strncmp((char *)state->buffer, ADV_PREFIX, ADV_PREFIX_SIZE) == 0) {
+        if (strncmp((char *)buffer, ADV_PREFIX, ADV_PREFIX_SIZE) == 0) {
             AdvertisementPacket packet = {};
-            memcpy(&packet, state->buffer, sizeof(AdvertisementPacket));
-            LOG_INFO(F("Receive adv packet. Address: "), packet.address, F(", period: "), packet.adv_period_millis);
-            state->routing_table.addRoute(packet.address, packet.adv_period_millis, radio->getRSSI());
+            memcpy(&packet, buffer, sizeof(AdvertisementPacket));
+            LOG_INFO(F("Received adv packet. Address: "), packet.address, F(", period: "), packet.adv_period_millis);
+            //state->routing_table.addRoute(packet.address, packet.adv_period_millis, radio->getRSSI());
             return true;
         }
     }

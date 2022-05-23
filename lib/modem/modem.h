@@ -29,19 +29,20 @@ class Modem {
         void setup();
         void loop();
         void serviceLoop();
-        void transmit(uint8_t* data, size_t len);
+        void transmitPacket(uint8_t* data, size_t len);
         void transmitAdvertisementPacket();
+        bool receiveAdvertisementPacket(uint8_t* buffer, size_t len);
         void reset();
+        void startReceive();
         ModemConfig* config();
         ModemState* state;
         ConfigPersister* persister;
-    private:
         SX1278* radio;
+    private:
         void (*send)(uint8_t* data, size_t len);
         void error(const __FlashStringHelper* msg, int16_t code);
         void receive();
-        bool receiveAdvertisementPacket(size_t len);
-        void startReceive();
+        void transmit(uint8_t* packet, size_t len);
         void flushOutput();
         void stopReceive();
 };

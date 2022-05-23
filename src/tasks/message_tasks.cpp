@@ -38,7 +38,7 @@ void execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* messa
     switch (executor->execute((char*)message->data, message->len, buffer))
     {
         case NOT_EXECUTED:
-            modem->transmit(message->data, message->len);
+            modem->transmitPacket(message->data, message->len);
             break;
         case EXECUTED_UPDATED:
             modem->persister->saveConfig();

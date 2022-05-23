@@ -41,6 +41,7 @@ struct ModemState {
     Network network;
     bool receive = false;
     bool is_received = false;
+    bool is_transmitted = false;
     int64_t last_receive_time = 0;
 };
 

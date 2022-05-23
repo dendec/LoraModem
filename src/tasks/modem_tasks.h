@@ -4,6 +4,8 @@
 
 void receive_task(void *pvParameter);
 
+void transmit_task(void *pvParameter);
+
 void send_advertisement_task(void *pvParameter);
 
 void cleanup_routes_task(void *pvParameter);
