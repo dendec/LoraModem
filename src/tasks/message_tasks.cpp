@@ -1,3 +1,4 @@
+#define DEBUGLOG_DISABLE_LOG
 #include <DebugLog.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -6,7 +7,7 @@
 #include "message.h"
 #include "message_tasks.h"
 
-void message_serial_reader(void *pvParameter)
+void message_serial_reader_task(void *pvParameter)
 {
     xQueueHandle messageQueue = (xQueueHandle) pvParameter;
 	while(true)
@@ -48,7 +49,7 @@ void execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* messa
     }
 }
 
-void message_handler(void *pvParameter)
+void message_handler_task(void *pvParameter)
 {
     volatile ModemWithQueueArg* argument = (ModemWithQueueArg*) pvParameter;
     CommandExecutor* executor = new CommandExecutor(argument->modem->state, argument->modem->persister);
@@ -62,7 +63,7 @@ void message_handler(void *pvParameter)
                 send_to_clients(message.client_id, message.data, message.len);
             }
         }
-	    vTaskDelay(100 / portTICK_RATE_MS);
+	    vTaskDelay(1 / portTICK_RATE_MS);
 	}
     delete executor;
     vTaskDelete( NULL );

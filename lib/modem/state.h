@@ -33,13 +33,9 @@ struct Network {
 
 struct ModemState {
     uint16_t address_destination = BROADCAST_ADDR;
-    uint8_t buffer[PACKET_SIZE];
-    size_t input_len = 0;
-    uint8_t output[BUFFER_SIZE];
-    size_t output_len = 0;
     RoutingTable routing_table;
     Network network;
-    bool receive = false;
+    bool receiving = false;
     bool is_received = false;
     bool is_transmitted = false;
     int64_t last_receive_time = 0;
