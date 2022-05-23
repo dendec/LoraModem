@@ -12,7 +12,7 @@ class ModemServer {
         void restart();
         void loop();
         void serviceLoop();
-        void send(uint8_t* data, size_t len);
+        void send(uint32_t* id, uint8_t* data, size_t len);
     private:
         DNSServer dnsServer;
         Modem* modem;

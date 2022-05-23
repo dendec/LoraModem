@@ -4,7 +4,6 @@
 #include "commands.h"
 #include "message.h"
 #include "message_tasks.h"
-#include "modem.h"
 #include "tasks_arguments.h"
 
 void message_serial_reader_task(void *pvParameter)
@@ -24,15 +23,14 @@ void message_serial_reader_task(void *pvParameter)
     vTaskDelete( NULL ); 
 }
 
-void send_to_clients(uint32_t* client_id, uint8_t* buffer, size_t size) {
-    if (client_id != NULL) {
-        //todo
-    } else {
-        Serial.write(buffer, size);
+void send_to_clients(ModemServer* server, uint32_t* client_id, uint8_t* buffer, size_t size) {
+    Serial.write(buffer, size);
+    if (server != nullptr) {
+        server->send(client_id, buffer, size);
     }
 }
 
-boolean execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* message) {
+boolean execute_or_transmit(ModemServer* server, CommandExecutor* executor, Modem* modem, Message* message) {
     ESP_LOGV(TAG, "%s", (char*)message->data);
     ESP_LOGV(TAG, "%d", message->len);
     char buffer[256];
@@ -49,7 +47,7 @@ boolean execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* me
             modem->persister->saveConfig();
             modem->reset();
         case EXECUTED:
-            send_to_clients(message->client_id, (uint8_t*) buffer, strlen(buffer));
+            send_to_clients(server, message->client_id, (uint8_t*) buffer, strlen(buffer));
     }
     return true;
 }
@@ -58,6 +56,7 @@ void message_handler_task(void *pvParameter)
 {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
+    ModemServer* server = argument->server;
     xQueueHandle queue = argument->queue;
     CommandExecutor* executor = new CommandExecutor(modem->state, modem->persister);
     while(true)
@@ -66,9 +65,9 @@ void message_handler_task(void *pvParameter)
         if (xQueuePeek(queue, (void *) &message, 100) == pdTRUE) {
             boolean is_transmitted = true;
             if (message.to_transmit) {
-                is_transmitted &= execute_or_transmit(executor, modem, &message);
+                is_transmitted &= execute_or_transmit(server, executor, modem, &message);
             } else {
-                send_to_clients(message.client_id, message.data, message.len);
+                send_to_clients(server, message.client_id, message.data, message.len);
             }
             if(is_transmitted) {
                 xQueueReceive(queue, (void *) &message, 100);

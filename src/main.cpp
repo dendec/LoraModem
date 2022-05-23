@@ -40,7 +40,7 @@ void setupServer(xQueueHandle messageQueue) {
 }
 
 void setupTasks(xQueueHandle messageQueue) {
-    static TaskArg taskArg = { .modem = modem, .display = display, .queue = messageQueue };
+    static TaskArg taskArg = { .modem = modem, .display = display, .server = server, .queue = messageQueue };
     xTaskCreatePinnedToCore(&message_serial_reader_task, "serial", 2048, messageQueue, 5, NULL, 0);
     xTaskCreatePinnedToCore(&message_handler_task, "m_handler", 4096, &taskArg, 5, NULL, 0);
     xTaskCreatePinnedToCore(&blink_task, "blink", 512, NULL, 1, NULL, 1);

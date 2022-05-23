@@ -115,14 +115,16 @@ void ModemServer::setup() {
 }
 
 void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
+    ESP_LOGD(TAG, "type: %d", type);
     if(type == WS_EVT_DATA) {
         AwsFrameInfo * info = (AwsFrameInfo*)arg;
         if (info->final && info->index == 0 && info->len == len) {
             Message message;
             uint32_t id = client->id();
             message.client_id = &id;
-            message.len = Serial.readBytes(message.data, PAYLOAD_SIZE);
+            message.len = len;
             message.to_transmit = true;
+            memcpy(message.data, data, len);
             xQueueSend(messageQueue, (void *) &message, 100);
             //modem->setInput(data, len);
         } else {
@@ -131,10 +133,15 @@ void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client
     }
 }
 
-void ModemServer::send(uint8_t* data, size_t len) {
+void ModemServer::send(uint32_t* id, uint8_t* data, size_t len) {
     if (mode != OFF) {
-        ESP_LOGD(TAG, String((char*) data));
-        ws->binaryAll(data, len);
+        if (id == nullptr) {
+            ESP_LOGD(TAG, "all:%s", (char*) data);
+            ws->binaryAll(data, len);
+        } else {
+            ESP_LOGD(TAG, "%u:%s", *id, (char*) data);
+            ws->binary(*id, data, len);
+        }
     }
 }
 

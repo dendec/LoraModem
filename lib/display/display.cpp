@@ -127,12 +127,12 @@ void ModemDisplay::updateNetworkStat(uint32_t tx, int32_t rx) {
     #ifdef HAS_OLED
     char buffer[6];
     convertBytes(buffer, tx);
-    ESP_LOGD(TAG, "tx: %u", buffer);
+    ESP_LOGV(TAG, "tx: %u", tx);
     clear(6, 12, 42, 7);
     display->drawString(6, 9, buffer);
     display->display();
     convertBytes(buffer, rx);
-    ESP_LOGD(TAG, "rx: %u", buffer);
+    ESP_LOGV(TAG, "rx: %u", rx);
     clear(54, 12, 42, 7);
     display->drawString(54, 9, buffer);
     display->display();
