@@ -1,6 +1,7 @@
 #ifndef STATE_H
 #define STATE_H
 #include <Stream.h>
+#include <vector>
 #include <map>
 
 const uint16_t BROADCAST_ADDR = 0xFFFF;

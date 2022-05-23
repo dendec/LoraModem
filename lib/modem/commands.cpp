@@ -1,5 +1,4 @@
-#define DEBUGLOG_RELEASE_MODE
-#include <DebugLog.h>
+#include <Esp.h>
 #include <Stream.h>
 #include <string.h>
 #include <stdio.h>
@@ -8,9 +7,7 @@
 Command::Command(const char* cmd): command(cmd) {}
 
 bool Command::parse(char* buffer, size_t len) {
-    LOG_DEBUG(buffer);
     char * pch = strstr(buffer, command);
-    LOG_DEBUG(pch);
     if (pch == NULL) {
         return false;
     } else {

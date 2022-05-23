@@ -1,5 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
+#include <stdint.h>
 
 const uint8_t SSID_SIZE = 32;
 const uint8_t PASSWORD_SIZE = 32;
@@ -38,7 +39,7 @@ class ConfigPersister {
         void saveConfig();
         void reset();
     private:
-        ModemConfig* config = NULL;
+        ModemConfig* config = nullptr;
         bool hasConfig = false;
 };
 

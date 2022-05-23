@@ -1,5 +1,3 @@
-//#define DEBUGLOG_DISABLE_LOG
-#include <DebugLog.h>
 #include "config.h"
 #include "modem.h"
 
@@ -29,11 +27,11 @@ void Modem::setup() {
         persister->getConfig()->radio.preamble,
         persister->getConfig()->radio.gain);
     if (err != ERR_NONE) {
-        LOG_ERROR(F("LoRa initialization failed. code:"), err);
+        ESP_LOGE(TAG, "LoRa initialization failed. code: %d", err);
         persister->reset();
         setup();
     } else {
-        LOG_INFO(F("LoRa initialized"));
+        ESP_LOGI(TAG, "LoRa initialized");
         receive();
     }
 }
@@ -54,7 +52,7 @@ void Modem::transmitAdvertisementPacket() {
     AdvertisementPacket packet = {{}, persister->getConfig()->address, persister->getConfig()->adv_period_millis};
     memcpy(packet.prefix, ADV_PREFIX, ADV_PREFIX_SIZE);
     transmit((uint8_t*)&packet, sizeof(AdvertisementPacket));
-    LOG_INFO(F("Adv packet sent"));
+    ESP_LOGI(TAG, "Adv packet sent");
 }
 
 ICACHE_RAM_ATTR
@@ -67,11 +65,11 @@ void onTransmit(void) {
 void Modem::transmit(uint8_t* data, size_t len) {
     state->receiving = false;
     state->is_transmitted = false;
-    //LOG_INFO(F("Transmit"), (char*)data);
+    ESP_LOGD(TAG, "%s", (char*)data);
     radio->setDio0Action(onTransmit);
     int16_t result = radio->startTransmit(data, len);
     if (result != ERR_NONE) {
-        LOG_ERROR(F("Transmit failed. code:"), result);
+        ESP_LOGE(TAG, "Transmit failed. code: %d", result);
     }
 }
 
@@ -83,7 +81,6 @@ void onReceive(void) {
 }
 
 void Modem::receive() {
-    state->last_receive_time = millis();
     state->receiving = true;
     radio->setDio0Action(onReceive);
     radio->startReceive(0, SX127X_RXCONTINUOUS);
@@ -94,7 +91,7 @@ bool Modem::receiveAdvertisementPacket(uint8_t* buffer, size_t len) {
         if (strncmp((char *)buffer, ADV_PREFIX, ADV_PREFIX_SIZE) == 0) {
             AdvertisementPacket packet = {};
             memcpy(&packet, buffer, sizeof(AdvertisementPacket));
-            LOG_INFO(F("Received adv packet. Address: "), packet.address, F(", period: "), packet.adv_period_millis);
+            ESP_LOGI(TAG, "Received adv packet. Address: %04X, period: %d", packet.address, packet.adv_period_millis);
             state->routing_table.addRoute(packet.address, packet.adv_period_millis, radio->getRSSI());
             return true;
         }

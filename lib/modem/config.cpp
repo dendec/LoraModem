@@ -1,4 +1,3 @@
-#include <DebugLog.h>
 #include <EEPROM.h>
 #include <WiFi.h>
 #include "config.h"
@@ -18,14 +17,14 @@ ModemConfig* ConfigPersister::getConfig() {
     EEPROM.get(0, configPersisted);
     if (configPersisted) {
         EEPROM.get(1, *config);
-        LOG_DEBUG(F("Config loaded"));
+        ESP_LOGI(TAG, "Config loaded");
     } else {
         config->radio = RadioConfig{434.0, 500.0, 9, 7, 10, 8, 0};
         config->network = NetworkConfig{{}, {}, AP, 1};
         byte mac[6];
         WiFi.macAddress(mac);
         memcpy(&config->address, mac + 4, sizeof(uint16_t)); // last 2 bytes
-        LOG_DEBUG(F("Default config loaded"));
+        ESP_LOGI(TAG, "Default config loaded");
     }
     hasConfig = true;
     return config;

@@ -7,7 +7,7 @@
 
 class ModemServer {
     public:
-        ModemServer(Modem* m, ModemDisplay* d);
+        ModemServer(Modem* m, ModemDisplay* d, void* q);
         void setup();
         void restart();
         void loop();
@@ -17,6 +17,7 @@ class ModemServer {
         DNSServer dnsServer;
         Modem* modem;
         ModemDisplay* display;
+        xQueueHandle messageQueue;
         AsyncWebServer* server = new AsyncWebServer(80);
         AsyncWebSocket* ws =  new AsyncWebSocket("/ws");
         WiFiMode mode = OFF;

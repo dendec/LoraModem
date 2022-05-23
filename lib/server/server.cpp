@@ -1,9 +1,8 @@
-#define DEBUGLOG_RELEASE_MODE
-#include <DebugLog.h>
 #include <SPIFFS.h>
 #include <string.h>
 #include <WiFi.h>
 #include "server.h"
+#include "message.h"
 
 const char* SSID_PREFIX = "LoRaModem";
 const char* AP_HOSTNAME = "loramodem.online";
@@ -34,12 +33,12 @@ char* getSSID(ModemConfig* config) {
 uint32_t configureWiFi(ModemConfig* config, ModemDisplay* display) {
     switch (config->network.WIFI_mode) {
         case OFF:
-            LOG_VERBOSE(F("OFF"));
+            ESP_LOGD(TAG, "OFF");
             break;
         case AP: {
-            LOG_VERBOSE(F("AP"));
+            ESP_LOGD(TAG, "AP");
             char* ssid = getSSID(config);
-            LOG_VERBOSE(F("SSID:"), ssid);
+            ESP_LOGD(TAG, "SSID: %s", ssid);
             char* password = config->network.password;
             bool result = WiFi.softAP(ssid, password, config->network.channel);
             if (result) {
@@ -47,15 +46,15 @@ uint32_t configureWiFi(ModemConfig* config, ModemDisplay* display) {
                 display->apInfo(ssid);
                 return (uint32_t)result;
             } else {
-                LOG_ERROR(F("WiFi AP error"));
+                ESP_LOGE(TAG, "WiFi AP error");
                 display->message("WiFi AP error");
             }
             break;
         }
         case STA: {
-            LOG_VERBOSE(F("STA"));
+            ESP_LOGD(TAG, "STA");
             char* ssid = getSSID(config);
-            LOG_VERBOSE(F("SSID:"), ssid);
+            ESP_LOGD(TAG, "SSID: %s", ssid);
             char* password = config->network.password;
             WiFi.mode(WIFI_STA);
             WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
@@ -70,14 +69,14 @@ uint32_t configureWiFi(ModemConfig* config, ModemDisplay* display) {
                 display->progress(connect_counter);
             }
             if (WiFi.status() == WL_CONNECTED) {
-                LOG_VERBOSE(F("Connected"));
+                ESP_LOGD(TAG, "Connected");
                 display->progress(100);
                 IPAddress ip = WiFi.localIP();
                 display->staInfo(ip.toString(), WiFi.RSSI());
                 return (uint32_t)ip;
             } {
                 sprintf(message, "Connection to\n%s failed", ssid);
-                LOG_ERROR(message);
+                ESP_LOGE(TAG, "%s", message);
                 display->message(message);
                 display->showNetworkStat(0, 0);
             }
@@ -87,21 +86,21 @@ uint32_t configureWiFi(ModemConfig* config, ModemDisplay* display) {
     return 0;
 }
 
-ModemServer::ModemServer(Modem* m, ModemDisplay* d): modem(m), display(d) { };
+ModemServer::ModemServer(Modem* m, ModemDisplay* d, void* q): modem(m), display(d), messageQueue(q) { };
 
 void ModemServer::setup() {
     if(!SPIFFS.begin(true)){
-        LOG_ERROR(F("SPIFFS error"));
+        ESP_LOGE(TAG, "SPIFFS error");
         return;
     }
-    uint32_t ip_num = configureWiFi(modem->config(), display);
+    uint32_t ip_num = configureWiFi(modem->persister->getConfig(), display);
     if (ip_num == 0) {
         return;
     }
     ip = IPAddress(ip_num);
     modem->state->network.ip = ip_num;
-    LOG_VERBOSE(F("IP:"), ip.toString());
-    mode = modem->config()->network.WIFI_mode;
+    ESP_LOGD(TAG, "IP: %s", ip.toString());
+    mode = modem->persister->getConfig()->network.WIFI_mode;
     if (mode == AP) {
         dnsServer.start(53, "*", ip);
         server->addHandler(new AnyURLRequestHandler()).setFilter(onWrongHost);
@@ -112,23 +111,29 @@ void ModemServer::setup() {
     server->addHandler(ws);
     server->serveStatic("/", SPIFFS, "").setDefaultFile("index.html").setFilter(onValidHost);
     server->begin();
-    LOG_VERBOSE(F("Server started"));
+    ESP_LOGI(TAG, "Server started");
 }
 
 void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
-  if(type == WS_EVT_DATA) {
-    AwsFrameInfo * info = (AwsFrameInfo*)arg;
-    if (info->final && info->index == 0 && info->len == len) {
-      modem->setInput(data, len);
-    } else {
-      client->text("Too long");
+    if(type == WS_EVT_DATA) {
+        AwsFrameInfo * info = (AwsFrameInfo*)arg;
+        if (info->final && info->index == 0 && info->len == len) {
+            Message message;
+            uint32_t id = client->id();
+            message.client_id = &id;
+            message.len = Serial.readBytes(message.data, PAYLOAD_SIZE);
+            message.to_transmit = true;
+            xQueueSend(messageQueue, (void *) &message, 100);
+            //modem->setInput(data, len);
+        } else {
+            client->text("Too long");
+        }
     }
-  }
 }
 
 void ModemServer::send(uint8_t* data, size_t len) {
     if (mode != OFF) {
-        LOG_VERBOSE(String((char*) data));
+        ESP_LOGD(TAG, String((char*) data));
         ws->binaryAll(data, len);
     }
 }
@@ -156,7 +161,7 @@ bool AnyURLRequestHandler::canHandle(AsyncWebServerRequest *request){
 }
 
 void AnyURLRequestHandler::handleRequest(AsyncWebServerRequest *request) {
-    LOG_VERBOSE(request->host(), F("->"), AP_HOSTNAME);
+    ESP_LOGD(TAG, "%s->%s", request->host(), AP_HOSTNAME);
     char url[strlen(AP_HOSTNAME) + 8];
     sprintf(url, "http://%s", AP_HOSTNAME);
     request->redirect(String(url));

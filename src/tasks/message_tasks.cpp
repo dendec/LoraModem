@@ -1,11 +1,11 @@
-#define DEBUGLOG_DISABLE_LOG
-#include <DebugLog.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "commands.h"
 #include "message.h"
 #include "message_tasks.h"
+#include "modem.h"
+#include "tasks_arguments.h"
 
 void message_serial_reader_task(void *pvParameter)
 {
@@ -32,14 +32,18 @@ void send_to_clients(uint32_t* client_id, uint8_t* buffer, size_t size) {
     }
 }
 
-void execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* message) {
-    LOG_INFO((char*)message->data);
-    LOG_INFO(message->len);
+boolean execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* message) {
+    ESP_LOGV(TAG, "%s", (char*)message->data);
+    ESP_LOGV(TAG, "%d", message->len);
     char buffer[256];
     switch (executor->execute((char*)message->data, message->len, buffer))
     {
         case NOT_EXECUTED:
-            modem->transmitPacket(message->data, message->len);
+            if (modem->state->receiving && !modem->state->is_transmitted) {
+                modem->transmitPacket(message->data, message->len);
+            } else {
+                return false;
+            }
             break;
         case EXECUTED_UPDATED:
             modem->persister->saveConfig();
@@ -47,20 +51,27 @@ void execute_or_transmit(CommandExecutor* executor, Modem* modem, Message* messa
         case EXECUTED:
             send_to_clients(message->client_id, (uint8_t*) buffer, strlen(buffer));
     }
+    return true;
 }
 
 void message_handler_task(void *pvParameter)
 {
-    volatile ModemWithQueueArg* argument = (ModemWithQueueArg*) pvParameter;
-    CommandExecutor* executor = new CommandExecutor(argument->modem->state, argument->modem->persister);
-	while(true)
+    volatile TaskArg* argument = (TaskArg*) pvParameter;
+    Modem* modem = argument->modem;
+    xQueueHandle queue = argument->queue;
+    CommandExecutor* executor = new CommandExecutor(modem->state, modem->persister);
+    while(true)
 	{
         Message message;
-        if (xQueueReceive(argument->queue, (void *) &message, 100) == pdTRUE) {
+        if (xQueuePeek(queue, (void *) &message, 100) == pdTRUE) {
+            boolean is_transmitted = true;
             if (message.to_transmit) {
-                execute_or_transmit(executor, argument->modem, &message);
+                is_transmitted &= execute_or_transmit(executor, modem, &message);
             } else {
                 send_to_clients(message.client_id, message.data, message.len);
+            }
+            if(is_transmitted) {
+                xQueueReceive(queue, (void *) &message, 100);
             }
         }
 	    vTaskDelay(1 / portTICK_RATE_MS);

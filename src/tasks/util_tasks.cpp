@@ -1,10 +1,10 @@
-#include <DebugLog.h>
 #include <esp32-hal-gpio.h>
+#include <Esp.h>
 #include "config.h"
+#include "tasks_arguments.h"
 #include "util_tasks.h"
 
-void blink_task(void *pvParameter)
-{
+void blink_task(void *pvParameter) {
     pinMode(BLINK_GPIO, OUTPUT);
     while(1) {
         digitalWrite(BLINK_GPIO, 0);
@@ -15,11 +15,33 @@ void blink_task(void *pvParameter)
     vTaskDelete( NULL );
 }
 
-void show_free_heap_task(void *pvParameter)
-{
+void show_free_heap_task(void *pvParameter) {
     while(1) {
-        LOG_INFO(F("Free heap:"), ESP.getFreeHeap());
-        vTaskDelay(100 / portTICK_RATE_MS);
+        ESP_LOGD(TAG, "Free heap: %u", ESP.getFreeHeap());
+        vTaskDelay(1000 / portTICK_RATE_MS);
+    }
+    vTaskDelete( NULL );
+}
+
+void update_display_network_task(void* pvParameter) {
+    volatile TaskArg* argument = (TaskArg*) pvParameter;
+    Modem* modem = argument->modem;
+    ModemDisplay* display = argument->display;
+    while(1) {
+        Network* network = &modem->state->network;
+        display->updateNetworkStat(network->transmit, network->receive);
+        vTaskDelay(1000 / portTICK_RATE_MS);
+    }
+    vTaskDelete( NULL );
+}
+
+void update_display_routes_task(void* pvParameter) {
+    volatile TaskArg* argument = (TaskArg*) pvParameter;
+    Modem* modem = argument->modem;
+    ModemDisplay* display = argument->display;
+    while(1) {
+        display->updateRoutes(modem->state->routing_table.getRoutes());
+        vTaskDelay(10000 / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }
