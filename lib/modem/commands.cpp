@@ -236,6 +236,25 @@ ExecutionResult CommandSfactor::executeQuery(char* buffer) {
     return EXECUTED;
 }
 
+// AT+RATE
+CommandCodeRate::CommandCodeRate(ConfigPersister* persister): AssignableCommand<int>("AT+RATE"), persister(persister) {}
+
+ExecutionResult CommandCodeRate::executeAssign(char* buffer) {
+    if (argument >= 5 && argument <= 8) {
+        persister->getConfig()->radio.coding_rate = argument;
+        ok(buffer);
+        return EXECUTED_UPDATED;
+    } else {
+        error("code rate", "5, 6, 7, 8", buffer);
+        return EXECUTED;
+    }
+}
+
+ExecutionResult CommandCodeRate::executeQuery(char* buffer) {
+    AssignableCommand::returnValue(persister->getConfig()->radio.coding_rate, buffer);
+    return EXECUTED;
+}
+
 // AT+POWER
 CommandPower::CommandPower(ConfigPersister* persister): AssignableCommand<int>("AT+POWER"), persister(persister) {}
 
@@ -353,12 +372,13 @@ CommandExecutor::CommandExecutor(ModemState* state, ConfigPersister* persister) 
     commands[4] = new CommandFreq(persister);
     commands[5] = new CommandBandwidth(persister);
     commands[6] = new CommandSfactor(persister);
-    commands[7] = new CommandPower(persister);
-    commands[8] = new CommandScan(state);
-    commands[9] = new CommandWIFI(persister);
-    commands[10] = new CommandRestart();
-    commands[11] = new CommandStat(state);
-    commands[12] = new CommandCIFSR(state);
+    commands[7] = new CommandCodeRate(persister);
+    commands[8] = new CommandPower(persister);
+    commands[9] = new CommandScan(state);
+    commands[10] = new CommandWIFI(persister);
+    commands[11] = new CommandRestart();
+    commands[12] = new CommandStat(state);
+    commands[13] = new CommandCIFSR(state);
 }
 
 CommandExecutor::~CommandExecutor() {

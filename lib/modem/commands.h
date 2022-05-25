@@ -101,6 +101,15 @@ class CommandSfactor: public AssignableCommand<int> {
         ConfigPersister* persister;
 };
 
+class CommandCodeRate: public AssignableCommand<int> {
+    public:
+        CommandCodeRate(ConfigPersister* persister);
+        ExecutionResult executeAssign(char* buffer);
+        ExecutionResult executeQuery(char* buffer);
+    private:
+        ConfigPersister* persister;
+};
+
 class CommandPower: public AssignableCommand<int> {
     public:
         CommandPower(ConfigPersister* persister);
