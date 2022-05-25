@@ -58,7 +58,7 @@ void message_handler_task(void *pvParameter)
     Modem* modem = argument->modem;
     ModemServer* server = argument->server;
     xQueueHandle queue = argument->queue;
-    CommandExecutor* executor = new CommandExecutor(modem->state, modem->persister);
+    CommandExecutor* executor = new CommandExecutor(modem);
     while(true)
 	{
         Message message;

@@ -1,8 +1,7 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
-#define COMMANDS_COUNT 13
-#include "config.h"
-#include "state.h"
+#define COMMANDS_COUNT 14
+#include "modem.h"
 
 enum ExecutionResult { NOT_EXECUTED, EXECUTED, EXECUTED_UPDATED };
 
@@ -60,63 +59,63 @@ class CommandRestart: public Command {
 
 class CommandConfig: public Command {
     public:
-        CommandConfig(ConfigPersister* persister);
+        CommandConfig(ModemConfig* config);
         ExecutionResult execute(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandAddr: public Command {
     public:
-        CommandAddr(ConfigPersister* persister);
+        CommandAddr(ModemConfig* config);
         ExecutionResult execute(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandFreq: public AssignableCommand<float> {
     public:
-        CommandFreq(ConfigPersister* persister);
+        CommandFreq(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandBandwidth: public AssignableCommand<float> {
     public:
-        CommandBandwidth(ConfigPersister* persister);
+        CommandBandwidth(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandSfactor: public AssignableCommand<int> {
     public:
-        CommandSfactor(ConfigPersister* persister);
+        CommandSfactor(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandCodeRate: public AssignableCommand<int> {
     public:
-        CommandCodeRate(ConfigPersister* persister);
+        CommandCodeRate(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandPower: public AssignableCommand<int> {
     public:
-        CommandPower(ConfigPersister* persister);
+        CommandPower(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
 class CommandScan: public Command {
@@ -137,16 +136,16 @@ class CommandStat: public Command {
 
 class CommandWIFI: public AssignableCommand<char**> {
     public:
-        CommandWIFI(ConfigPersister* persister);
+        CommandWIFI(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
-        ConfigPersister* persister;
+        ModemConfig* config;
 };
 
-class CommandCIFSR: public Command { // get local IP-address
+class CommandIP: public Command { // get local IP-address
     public:
-        CommandCIFSR(ModemState* state);
+        CommandIP(ModemState* state);
         ExecutionResult execute(char* buffer);
     private:
         ModemState* state;
@@ -154,7 +153,7 @@ class CommandCIFSR: public Command { // get local IP-address
 
 class CommandExecutor {
     public:
-        CommandExecutor(ModemState* state, ConfigPersister* persister);
+        CommandExecutor(Modem* modem);
         ~CommandExecutor();
         ExecutionResult execute(char* input, size_t len, char* buffer);
     private:

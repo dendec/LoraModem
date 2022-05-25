@@ -27,7 +27,6 @@ struct NetworkConfig {
 struct ModemConfig {
     RadioConfig radio;
     NetworkConfig network;
-    uint8_t max_attempts = 0;
     uint16_t address = 0;
     uint16_t adv_period_millis = 10000;
 };

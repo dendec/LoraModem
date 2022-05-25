@@ -1,7 +1,3 @@
-#include <Esp.h>
-#include <Stream.h>
-#include <string.h>
-#include <stdio.h>
 #include "commands.h"
 
 Command::Command(const char* cmd): command(cmd) {}
@@ -151,8 +147,8 @@ ExecutionResult CommandReset::execute(char* buffer) {
     return EXECUTED_UPDATED;
 }
 
-// AT+RESTART
-CommandRestart::CommandRestart(): Command("AT+RESTART") {}
+// AT+RST
+CommandRestart::CommandRestart(): Command("AT+RST") {}
 
 ExecutionResult CommandRestart::execute(char* buffer) {
     ok(buffer);
@@ -161,10 +157,9 @@ ExecutionResult CommandRestart::execute(char* buffer) {
 }
 
 // AT+CONF
-CommandConfig::CommandConfig(ConfigPersister* persister): Command("AT+CONF"), persister(persister) {}
+CommandConfig::CommandConfig(ModemConfig* config): Command("AT+CONF"), config(config) {}
 
 ExecutionResult CommandConfig::execute(char* buffer) {
-    ModemConfig* config = persister->getConfig();
     sprintf(buffer, "%04X,%.1f,%.1f,%u,%u,%u,%u\n",
         config->address, config->radio.frequency, config->radio.bandwidth, 
         config->radio.sfactor, config->radio.coding_rate, config->radio.power, config->radio.gain);
@@ -172,19 +167,19 @@ ExecutionResult CommandConfig::execute(char* buffer) {
 }
 
 // AT+ADDR
-CommandAddr::CommandAddr(ConfigPersister* persister): Command("AT+ADDR"), persister(persister) {}
+CommandAddr::CommandAddr(ModemConfig* config): Command("AT+ADDR"), config(config) {}
 
 ExecutionResult CommandAddr::execute(char* buffer) {
-    sprintf(buffer, "%04X", persister->getConfig()->address);
+    sprintf(buffer, "%04X", config->address);
     return EXECUTED;
 }
 
 // AT+FREQ
-CommandFreq::CommandFreq(ConfigPersister* persister): AssignableCommand<float>("AT+FREQ"), persister(persister) {}
+CommandFreq::CommandFreq(ModemConfig* config): AssignableCommand<float>("AT+FREQ"), config(config) {}
 
 ExecutionResult CommandFreq::executeAssign(char* buffer) {
     if (argument >= 410.0 && argument <= 525.0) {
-        persister->getConfig()->radio.frequency = argument;
+        config->radio.frequency = argument;
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
@@ -194,16 +189,16 @@ ExecutionResult CommandFreq::executeAssign(char* buffer) {
 }
 
 ExecutionResult CommandFreq::executeQuery(char* buffer) {
-    AssignableCommand::returnValue(persister->getConfig()->radio.frequency, buffer);
+    AssignableCommand::returnValue(config->radio.frequency, buffer);
     return EXECUTED;
 }
 
-// AT+BANDWIDTH
-CommandBandwidth::CommandBandwidth(ConfigPersister* persister): AssignableCommand<float>("AT+BANDWIDTH"), persister(persister) {}
+// AT+BW
+CommandBandwidth::CommandBandwidth(ModemConfig* config): AssignableCommand<float>("AT+BW"), config(config) {}
 
 ExecutionResult CommandBandwidth::executeAssign(char* buffer) {
     if (argument == 500.0 || argument == 250.0 || argument == 125.0 || argument == 62.5) {
-        persister->getConfig()->radio.bandwidth = argument;
+        config->radio.bandwidth = argument;
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
@@ -213,16 +208,16 @@ ExecutionResult CommandBandwidth::executeAssign(char* buffer) {
 }
 
 ExecutionResult CommandBandwidth::executeQuery(char* buffer) {
-    AssignableCommand::returnValue(persister->getConfig()->radio.bandwidth, buffer);
+    AssignableCommand::returnValue(config->radio.bandwidth, buffer);
     return EXECUTED;
 }
 
-// AT+SFACTOR
-CommandSfactor::CommandSfactor(ConfigPersister* persister): AssignableCommand<int>("AT+SFACTOR"), persister(persister) {}
+// AT+SF
+CommandSfactor::CommandSfactor(ModemConfig* config): AssignableCommand<int>("AT+SF"), config(config) {}
 
 ExecutionResult CommandSfactor::executeAssign(char* buffer) {
     if (argument >= 6 && argument <= 12) {
-        persister->getConfig()->radio.sfactor = argument;
+        config->radio.sfactor = argument;
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
@@ -232,16 +227,16 @@ ExecutionResult CommandSfactor::executeAssign(char* buffer) {
 }
 
 ExecutionResult CommandSfactor::executeQuery(char* buffer) {
-    AssignableCommand::returnValue(persister->getConfig()->radio.sfactor, buffer);
+    AssignableCommand::returnValue(config->radio.sfactor, buffer);
     return EXECUTED;
 }
 
 // AT+RATE
-CommandCodeRate::CommandCodeRate(ConfigPersister* persister): AssignableCommand<int>("AT+RATE"), persister(persister) {}
+CommandCodeRate::CommandCodeRate(ModemConfig* config): AssignableCommand<int>("AT+RATE"), config(config) {}
 
 ExecutionResult CommandCodeRate::executeAssign(char* buffer) {
     if (argument >= 5 && argument <= 8) {
-        persister->getConfig()->radio.coding_rate = argument;
+        config->radio.coding_rate = argument;
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
@@ -251,16 +246,16 @@ ExecutionResult CommandCodeRate::executeAssign(char* buffer) {
 }
 
 ExecutionResult CommandCodeRate::executeQuery(char* buffer) {
-    AssignableCommand::returnValue(persister->getConfig()->radio.coding_rate, buffer);
+    AssignableCommand::returnValue(config->radio.coding_rate, buffer);
     return EXECUTED;
 }
 
-// AT+POWER
-CommandPower::CommandPower(ConfigPersister* persister): AssignableCommand<int>("AT+POWER"), persister(persister) {}
+// AT+POW
+CommandPower::CommandPower(ModemConfig* config): AssignableCommand<int>("AT+POW"), config(config) {}
 
 ExecutionResult CommandPower::executeAssign(char* buffer) {
     if (((argument >= -3) && (argument <= 17)) || (argument == 20)) {
-        persister->getConfig()->radio.power = argument;
+        config->radio.power = argument;
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
@@ -270,7 +265,7 @@ ExecutionResult CommandPower::executeAssign(char* buffer) {
 }
 
 ExecutionResult CommandPower::executeQuery(char* buffer) {
-    AssignableCommand::returnValue(persister->getConfig()->radio.power, buffer);
+    AssignableCommand::returnValue(config->radio.power, buffer);
     return EXECUTED;
 }
 
@@ -304,10 +299,9 @@ ExecutionResult CommandStat::execute(char* buffer) {
 }
 
 // AT+WIFI
-CommandWIFI::CommandWIFI(ConfigPersister* persister): AssignableCommand<char**>("AT+WIFI"), persister(persister) {}
+CommandWIFI::CommandWIFI(ModemConfig* config): AssignableCommand<char**>("AT+WIFI"), config(config) {}
 
 ExecutionResult CommandWIFI::executeAssign(char* buffer) {
-    ModemConfig* config = persister->getConfig();
     if (argument_size == 0 || argument_size > 4) {
         return EXECUTED;
     }
@@ -340,7 +334,6 @@ ExecutionResult CommandWIFI::executeAssign(char* buffer) {
 }
 
 ExecutionResult CommandWIFI::executeQuery(char* buffer) {
-    ModemConfig* config = persister->getConfig();
     sprintf(buffer, "%d,%d", 
         config->network.WIFI_mode,
         config->network.channel);
@@ -356,29 +349,31 @@ ExecutionResult CommandWIFI::executeQuery(char* buffer) {
     return EXECUTED;
 }
 
-// AT+CIFSR get local IP-address
-CommandCIFSR::CommandCIFSR(ModemState* state): Command("AT+CIFSR"), state(state) {}
+// AT+IP get local IP-address
+CommandIP::CommandIP(ModemState* state): Command("AT+IP"), state(state) {}
 
-ExecutionResult CommandCIFSR::execute(char* buffer) {
-    sprintf(buffer, "+CIFSR:%s\n", IPAddress(state->network.ip).toString().c_str());
+ExecutionResult CommandIP::execute(char* buffer) {
+    sprintf(buffer, "%s\n", IPAddress(state->network.ip).toString().c_str());
     return EXECUTED;
 }
 
-CommandExecutor::CommandExecutor(ModemState* state, ConfigPersister* persister) {
+CommandExecutor::CommandExecutor(Modem* modem) {
+    ModemConfig* config = modem->persister->getConfig();
+    ModemState* state = modem->state;
     commands[0] = new CommandAT();
-    commands[1] = new CommandReset(persister);
-    commands[2] = new CommandConfig(persister);
-    commands[3] = new CommandAddr(persister);
-    commands[4] = new CommandFreq(persister);
-    commands[5] = new CommandBandwidth(persister);
-    commands[6] = new CommandSfactor(persister);
-    commands[7] = new CommandCodeRate(persister);
-    commands[8] = new CommandPower(persister);
+    commands[1] = new CommandReset(modem->persister);
+    commands[2] = new CommandConfig(config);
+    commands[3] = new CommandAddr(config);
+    commands[4] = new CommandFreq(config);
+    commands[5] = new CommandBandwidth(config);
+    commands[6] = new CommandSfactor(config);
+    commands[7] = new CommandCodeRate(config);
+    commands[8] = new CommandPower(config);
     commands[9] = new CommandScan(state);
-    commands[10] = new CommandWIFI(persister);
+    commands[10] = new CommandWIFI(config);
     commands[11] = new CommandRestart();
     commands[12] = new CommandStat(state);
-    commands[13] = new CommandCIFSR(state);
+    commands[13] = new CommandIP(state);
 }
 
 CommandExecutor::~CommandExecutor() {
