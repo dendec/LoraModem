@@ -165,11 +165,10 @@ void ModemDisplay::updateNodes(std::vector<Node*> nodes) {
     #ifdef HAS_OLED
     clear(0, 20, width, height);
     if (nodes.size() > 0) {
-        std::vector<Node*>::iterator it;
         char buffer[32];
         unsigned long now = millis();
         uint8_t i = 0;
-        for (it = nodes.begin(); it != nodes.end(); it++) {
+        for (auto it = nodes.begin(); it != nodes.end(); it++) {
             int32_t age = now - (*it)->time;
             sprintf(buffer, "%04X %.1f", (*it)->address, (*it)->rssi);
             if (ADVERTISING_PERIOD_MS < age) {

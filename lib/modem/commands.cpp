@@ -277,9 +277,8 @@ ExecutionResult CommandScan::execute(char* buffer) {
     std::vector<Node*> nodes = state->nodes.getNodes();
     if (nodes.size() > 0) {
         char b[32];
-        std::vector<Node*>::iterator it;
         unsigned long now = millis();
-        for (it = nodes.begin(); it != nodes.end(); it++) {
+        for (auto it = nodes.begin(); it != nodes.end(); it++) {
             int32_t age = now - (*it)->time;
             sprintf(b, "%04X,%.1f,%d\n", (*it)->address, (*it)->rssi, age);
             strcat(buffer, b);
