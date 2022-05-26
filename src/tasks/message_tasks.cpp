@@ -6,9 +6,10 @@
 #include "message_tasks.h"
 #include "tasks_arguments.h"
 
+extern QueueHandle_t queue;
+
 void serial_reader_task(void *pvParameter)
 {
-    xQueueHandle messageQueue = (xQueueHandle) pvParameter;
     portTickType lastWakeTime = xTaskGetTickCount();
 	while(true)
 	{
@@ -17,7 +18,7 @@ void serial_reader_task(void *pvParameter)
             message.client_id = NULL;
             message.len = Serial.readBytes(message.data, PAYLOAD_SIZE);
             message.to_transmit = true;
-            xQueueSend(messageQueue, (void *) &message, 10 / portTICK_RATE_MS);
+            xQueueSend(queue, (void *) &message, 10 / portTICK_RATE_MS);
         }
         vTaskDelayUntil( &lastWakeTime, ( 3 / portTICK_RATE_MS ) ); // 1/115200*250*1000
 	}
@@ -58,7 +59,6 @@ void message_handler_task(void *pvParameter)
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     ModemServer* server = argument->server;
-    xQueueHandle queue = argument->queue;
     CommandExecutor* executor = new CommandExecutor(modem);
     while(true)
 	{

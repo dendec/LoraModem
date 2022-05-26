@@ -8,7 +8,6 @@ typedef struct {
     Modem* modem;
     ModemDisplay* display;
     ModemServer* server;
-    QueueHandle_t queue;
 } TaskArg;
 
 #endif

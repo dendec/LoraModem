@@ -3,11 +3,11 @@
 #include "tasks_arguments.h"
 
 extern SemaphoreHandle_t modem_semaphore;
+extern QueueHandle_t queue;
 
 void modem_task(void *pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
-    xQueueHandle queue = argument->queue;
     uint8_t buffer[SX127X_MAX_PACKET_LENGTH];
     while(true) {
         xSemaphoreTake( modem_semaphore, portMAX_DELAY );
@@ -44,7 +44,6 @@ void modem_task(void *pvParameter) {
 void send_advertisement_task(void *pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
-    xQueueHandle queue = argument->queue;
     while(true) {
         uint16_t period = modem->persister->getConfig()->adv_period_millis;
         if (

@@ -11,6 +11,7 @@ Modem* modem;
 ModemDisplay* display;
 ModemServer* server;
 
+QueueHandle_t queue;
 SemaphoreHandle_t modem_semaphore;
 
 void setupSerial() {
@@ -23,8 +24,6 @@ void setupDisplay() {
     #ifdef HAS_OLED
     display = new ModemDisplay(OLED_SDA, OLED_SCL, OLED_RST, OLED_WIDTH, OLED_HEIGHT);
     display->setup();
-    #else
-    display = new ModemDisplay();
     #endif
 }
 
@@ -36,22 +35,21 @@ void setupModem() {
     modem->setup();
 }
 
-void setupServer(xQueueHandle messageQueue) {
-    server = new ModemServer(modem, display, messageQueue);
+void setupServer() {
+    server = new ModemServer(modem, display, queue);
     server->setup();
 }
 
-void setupTasks(xQueueHandle messageQueue) {
+void setupTasks() {
     static TaskArg taskArg = { 
         .modem = modem, 
         .display = display, 
-        .server = server, 
-        .queue = messageQueue,
+        .server = server,
     };
-    xTaskCreatePinnedToCore(&serial_reader_task, "serial", 2048, messageQueue, 2, NULL, 1);
+    xTaskCreatePinnedToCore(&serial_reader_task, "serial", 2048, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(&message_handler_task, "m_handler", 4096, &taskArg, 2, NULL, 1);
     xTaskCreatePinnedToCore(&blink_task, "blink", 512, NULL, 1, NULL, 1);
-    xTaskCreatePinnedToCore(&modem_task, "rx", 4096, &taskArg, 3, NULL, 1);
+    xTaskCreatePinnedToCore(&modem_task, "modem", 4096, &taskArg, 3, NULL, 1);
     xTaskCreatePinnedToCore(&send_advertisement_task, "adv", 2048, &taskArg, 1, NULL, 1);
     xTaskCreatePinnedToCore(&cleanup_routes_task, "clean", 2048, modem, 1, NULL, 1);
     #ifdef HAS_OLED
@@ -64,13 +62,13 @@ void setupTasks(xQueueHandle messageQueue) {
 }
 
 void setup() {
-    xQueueHandle messageQueue = xQueueCreate(10, sizeof(Message));
+    queue = xQueueCreate(10, sizeof(Message));
     modem_semaphore = xSemaphoreCreateBinary();
     setupSerial();
     setupDisplay();
     setupModem();
-    setupServer(messageQueue);
-    setupTasks(messageQueue);
+    setupServer();
+    setupTasks();
     ESP_LOGI(TAG, "Setup completed");
 }
 
