@@ -2,13 +2,16 @@
 #include "message.h"
 #include "tasks_arguments.h"
 
-void receive_task(void *pvParameter) {
+extern SemaphoreHandle_t modem_semaphore;
+
+void modem_task(void *pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     xQueueHandle queue = argument->queue;
     uint8_t buffer[SX127X_MAX_PACKET_LENGTH];
     while(true) {
-        if (modem->state->receiving && modem->state->is_received) {
+        xSemaphoreTake( modem_semaphore, portMAX_DELAY );
+        if (modem->state->receiving) {
             int16_t result = modem->radio->readData(buffer, SX127X_MAX_PACKET_LENGTH);
             if (result == ERR_NONE) {
                 size_t len = modem->radio->getPacketLength();
@@ -31,22 +34,10 @@ void receive_task(void *pvParameter) {
             } else {
                 ESP_LOGE(TAG, "Receive failed. code: %d", result);
             }
-            modem->state->is_received = false;
-            modem->receive();
-        }
-        vTaskDelay(1 / portTICK_RATE_MS);
-    }
-}
-
-void transmit_task(void *pvParameter) {
-    Modem* modem = (Modem*) pvParameter;
-    while(true) {
-        if (!modem->state->receiving && modem->state->is_transmitted) {
+        } else {
             ESP_LOGD(TAG, "Transmitted");
-            modem->state->is_transmitted = false;
-            modem->receive();
         }
-        vTaskDelay(1 / portTICK_RATE_MS);
+        modem->receive();
     }
 }
 

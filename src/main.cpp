@@ -11,6 +11,8 @@ Modem* modem;
 ModemDisplay* display;
 ModemServer* server;
 
+SemaphoreHandle_t modem_semaphore;
+
 void setupSerial() {
     Serial.begin(SERIAL_SPEED);
     Serial.setRxBufferSize(SERIAL_SIZE_RX);
@@ -40,21 +42,30 @@ void setupServer(xQueueHandle messageQueue) {
 }
 
 void setupTasks(xQueueHandle messageQueue) {
-    static TaskArg taskArg = { .modem = modem, .display = display, .server = server, .queue = messageQueue };
-    xTaskCreatePinnedToCore(&message_serial_reader_task, "serial", 2048, messageQueue, 5, NULL, 0);
-    xTaskCreatePinnedToCore(&message_handler_task, "m_handler", 4096, &taskArg, 5, NULL, 0);
+    static TaskArg taskArg = { 
+        .modem = modem, 
+        .display = display, 
+        .server = server, 
+        .queue = messageQueue,
+    };
+    xTaskCreatePinnedToCore(&serial_reader_task, "serial", 2048, messageQueue, 2, NULL, 1);
+    xTaskCreatePinnedToCore(&message_handler_task, "m_handler", 4096, &taskArg, 2, NULL, 1);
     xTaskCreatePinnedToCore(&blink_task, "blink", 512, NULL, 1, NULL, 1);
-    xTaskCreatePinnedToCore(&receive_task, "rx", 4096, &taskArg, 10, NULL, 1);
-    xTaskCreatePinnedToCore(&transmit_task, "tx", 4096, modem, 10, NULL, 1);
+    xTaskCreatePinnedToCore(&modem_task, "rx", 4096, &taskArg, 3, NULL, 1);
     xTaskCreatePinnedToCore(&send_advertisement_task, "adv", 2048, &taskArg, 1, NULL, 1);
     xTaskCreatePinnedToCore(&cleanup_routes_task, "clean", 2048, modem, 1, NULL, 1);
+    #ifdef HAS_OLED
     xTaskCreatePinnedToCore(&update_display_network_task, "d_net", 2048, &taskArg, 1, NULL, 1);
     xTaskCreatePinnedToCore(&update_display_routes_task, "d_route", 2048, &taskArg, 1, NULL, 1);
-    //xTaskCreatePinnedToCore(&show_free_heap_task, "mem", 2048, NULL, 1, NULL, 1);
+    #endif
+    #if DCORE_DEBUG_LEVEL > 3
+    xTaskCreatePinnedToCore(&show_free_heap_task, "mem", 2048, NULL, 1, NULL, 1);
+    #endif
 }
 
 void setup() {
     xQueueHandle messageQueue = xQueueCreate(10, sizeof(Message));
+    modem_semaphore = xSemaphoreCreateBinary();
     setupSerial();
     setupDisplay();
     setupModem();

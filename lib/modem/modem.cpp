@@ -4,6 +4,7 @@
 const uint8_t ADV_PREFIX_SIZE = 13;
 const char* ADV_PREFIX = "ADVERTISEMENT";
 extern Modem* modem;
+extern SemaphoreHandle_t modem_semaphore;
 
 struct AdvertisementPacket {
     char prefix[ADV_PREFIX_SIZE];
@@ -56,33 +57,28 @@ void Modem::transmitAdvertisementPacket() {
 }
 
 ICACHE_RAM_ATTR
-void onTransmit(void) {
-    if (!modem->state->receiving) {
-        modem->state->is_transmitted = true;
+void modemISR(void) {
+    static portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR( modem_semaphore, &xHigherPriorityTaskWoken );
+    if( xHigherPriorityTaskWoken == pdTRUE )
+    {
+        portYIELD_FROM_ISR();
     }
 }
 
 void Modem::transmit(uint8_t* data, size_t len) {
     state->receiving = false;
-    state->is_transmitted = false;
     ESP_LOGV(TAG, "%s", (char*)data);
-    radio->setDio0Action(onTransmit);
+    radio->setDio0Action(modemISR);
     int16_t result = radio->startTransmit(data, len);
     if (result != ERR_NONE) {
         ESP_LOGE(TAG, "Transmit failed. code: %d", result);
     }
 }
 
-ICACHE_RAM_ATTR
-void onReceive(void) {
-    if (modem->state->receiving) {
-        modem->state->is_received = true;
-    }
-}
-
 void Modem::receive() {
     state->receiving = true;
-    radio->setDio0Action(onReceive);
+    radio->setDio0Action(modemISR);
     radio->startReceive(0, SX127X_RXCONTINUOUS);
 }
 

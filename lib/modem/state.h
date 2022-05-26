@@ -37,8 +37,6 @@ struct ModemState {
     RoutingTable routing_table;
     Network network;
     bool receiving = false;
-    bool is_received = false;
-    bool is_transmitted = false;
     int64_t last_receive_time = 0;
 };
 

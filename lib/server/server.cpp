@@ -99,7 +99,6 @@ void ModemServer::setup() {
     }
     ip = IPAddress(ip_num);
     modem->state->network.ip = ip_num;
-    ESP_LOGD(TAG, "IP: %s", ip.toString());
     mode = modem->persister->getConfig()->network.WIFI_mode;
     if (mode == AP) {
         dnsServer.start(53, "*", ip);

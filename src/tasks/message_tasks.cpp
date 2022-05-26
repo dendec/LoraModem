@@ -6,9 +6,10 @@
 #include "message_tasks.h"
 #include "tasks_arguments.h"
 
-void message_serial_reader_task(void *pvParameter)
+void serial_reader_task(void *pvParameter)
 {
     xQueueHandle messageQueue = (xQueueHandle) pvParameter;
+    portTickType lastWakeTime = xTaskGetTickCount();
 	while(true)
 	{
         if (Serial.available() > 0) {
@@ -16,9 +17,9 @@ void message_serial_reader_task(void *pvParameter)
             message.client_id = NULL;
             message.len = Serial.readBytes(message.data, PAYLOAD_SIZE);
             message.to_transmit = true;
-            xQueueSend(messageQueue, (void *) &message, 100);
+            xQueueSend(messageQueue, (void *) &message, 10 / portTICK_RATE_MS);
         }
-	    vTaskDelay(100 / portTICK_RATE_MS);
+        vTaskDelayUntil( &lastWakeTime, ( 3 / portTICK_RATE_MS ) ); // 1/115200*250*1000
 	}
     vTaskDelete( NULL ); 
 }
@@ -37,7 +38,7 @@ boolean execute_or_transmit(ModemServer* server, CommandExecutor* executor, Mode
     switch (executor->execute((char*)message->data, message->len, buffer))
     {
         case NOT_EXECUTED:
-            if (modem->state->receiving && !modem->state->is_transmitted) {
+            if (modem->state->receiving) {
                 modem->transmitPacket(message->data, message->len);
             } else {
                 return false;
@@ -62,7 +63,7 @@ void message_handler_task(void *pvParameter)
     while(true)
 	{
         Message message;
-        if (xQueuePeek(queue, (void *) &message, 100) == pdTRUE) {
+        if (xQueuePeek(queue, (void *) &message, 10 / portTICK_RATE_MS)) {
             boolean is_transmitted = true;
             if (message.to_transmit) {
                 is_transmitted &= execute_or_transmit(server, executor, modem, &message);
@@ -70,10 +71,9 @@ void message_handler_task(void *pvParameter)
                 send_to_clients(server, message.client_id, message.data, message.len);
             }
             if(is_transmitted) {
-                xQueueReceive(queue, (void *) &message, 100);
+                xQueueReceive(queue, (void *) &message, 10 / portTICK_RATE_MS);
             }
         }
-	    vTaskDelay(1 / portTICK_RATE_MS);
 	}
     delete executor;
     vTaskDelete( NULL );
