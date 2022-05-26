@@ -1,16 +1,9 @@
 #include "config.h"
 #include "modem.h"
 
-const uint8_t ADV_PREFIX_SIZE = 13;
-const char* ADV_PREFIX = "ADVERTISEMENT";
 extern Modem* modem;
 extern SemaphoreHandle_t modem_semaphore;
 
-struct AdvertisementPacket {
-    char prefix[ADV_PREFIX_SIZE];
-    uint16_t address;
-    uint16_t adv_period_millis;
-};
 
 Modem::Modem(SX1278* r): radio(r) {
     persister = new ConfigPersister();
@@ -49,10 +42,9 @@ void Modem::transmitPacket(uint8_t* data, size_t len) {
     state->network.transmit += len;
 }
 
-void Modem::transmitAdvertisementPacket() {
-    AdvertisementPacket packet = {{}, persister->getConfig()->address, persister->getConfig()->adv_period_millis};
-    memcpy(packet.prefix, ADV_PREFIX, ADV_PREFIX_SIZE);
-    transmit((uint8_t*)&packet, sizeof(AdvertisementPacket));
+void Modem::transmitAdvertisingPacket() {
+    Packet packet = {persister->getConfig()->address, BROADCAST_ADDR, {}};
+    transmit((uint8_t*)&packet, SERVICE_SIZE);
     ESP_LOGI(TAG, "Adv packet sent");
 }
 
@@ -80,17 +72,4 @@ void Modem::receive() {
     state->receiving = true;
     radio->setDio0Action(modemISR);
     radio->startReceive(0, SX127X_RXCONTINUOUS);
-}
-
-bool Modem::receiveAdvertisementPacket(uint8_t* buffer, size_t len) {
-    if (len == sizeof(AdvertisementPacket)) {
-        if (strncmp((char *)buffer, ADV_PREFIX, ADV_PREFIX_SIZE) == 0) {
-            AdvertisementPacket packet = {};
-            memcpy(&packet, buffer, sizeof(AdvertisementPacket));
-            ESP_LOGI(TAG, "Received adv packet. Address: %04X, period: %d", packet.address, packet.adv_period_millis);
-            state->routing_table.addRoute(packet.address, packet.adv_period_millis, radio->getRSSI());
-            return true;
-        }
-    }
-    return false;
 }

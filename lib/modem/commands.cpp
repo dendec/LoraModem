@@ -274,14 +274,14 @@ CommandScan::CommandScan(ModemState* state): Command("AT+SCAN"), state(state) {}
 
 ExecutionResult CommandScan::execute(char* buffer) {
     strcpy(buffer, "");
-    std::vector<RoutingTableRecord*> routes = state->routing_table.getRoutes();
-    if (routes.size() > 0) {
+    std::vector<Node*> nodes = state->nodes.getNodes();
+    if (nodes.size() > 0) {
         char b[32];
-        std::vector<RoutingTableRecord*>::iterator it;
+        std::vector<Node*>::iterator it;
         unsigned long now = millis();
-        for (it = routes.begin(); it != routes.end(); it++) {
-            int32_t age = now - (*it)->received_millis;
-            sprintf(b, "%04X,%d,%.1f,%d\n", (*it)->address, (*it)->adv_period_millis, (*it)->rssi, age);
+        for (it = nodes.begin(); it != nodes.end(); it++) {
+            int32_t age = now - (*it)->time;
+            sprintf(b, "%04X,%.1f,%d\n", (*it)->address, (*it)->rssi, age);
             strcat(buffer, b);
         }
     }

@@ -15,12 +15,16 @@ void modem_task(void *pvParameter) {
             int16_t result = modem->radio->readData(buffer, SX127X_MAX_PACKET_LENGTH);
             if (result == ERR_NONE) {
                 size_t len = modem->radio->getPacketLength();
-                if (!modem->receiveAdvertisementPacket(buffer, len)) {
-                    ESP_LOGD(TAG, "Received %d bytes", len);
-                    Packet packet = {};
-                    memcpy(&packet, buffer, len);
-                    if (packet.dst == modem->persister->getConfig()->address || packet.dst == BROADCAST_ADDR) {
-                        uint8_t payload_len = len - SERVICE_SIZE;
+                ESP_LOGD(TAG, "Received %d bytes", len);
+                Packet packet = {};
+                memcpy(&packet, buffer, len);
+                if (packet.dst == modem->persister->getConfig()->address || packet.dst == BROADCAST_ADDR) {
+                    uint8_t payload_len = len - SERVICE_SIZE;
+                    if (payload_len == 0 && packet.dst == BROADCAST_ADDR) {
+                        ESP_LOGI(TAG, "Received adv packet from %04X", packet.address);
+                        modem->state->nodes.addNode(packet.src, modem->radio->getRSSI());
+                    }
+                    if (payload_len > 0) {
                         modem->state->network.receive += payload_len;
                         modem->state->last_receive_time = millis();
                         Message message;
@@ -28,7 +32,7 @@ void modem_task(void *pvParameter) {
                         message.len = payload_len;
                         message.to_transmit = false;
                         memcpy(message.data, packet.payload, payload_len);
-                        xQueueSend(queue, (void *) &message, 100);
+                        xQueueSend(queue, (void *) &message, 100 / portTICK_RATE_MS);
                     }
                 }
             } else {
@@ -41,19 +45,18 @@ void modem_task(void *pvParameter) {
     }
 }
 
-void send_advertisement_task(void *pvParameter) {
+void send_advertising_task(void *pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     while(true) {
-        uint16_t period = modem->persister->getConfig()->adv_period_millis;
         if (
             modem->state->receiving && 
-            millis() - modem->state->last_receive_time > period && 
+            millis() - modem->state->last_receive_time > ADVERTISING_PERIOD_MS && 
             uxQueueMessagesWaiting(queue) == 0
         ) {
-            modem->transmitAdvertisementPacket();
+            modem->transmitAdvertisingPacket();
         }
-        vTaskDelay(period / portTICK_RATE_MS);
+        vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }
@@ -61,8 +64,8 @@ void send_advertisement_task(void *pvParameter) {
 void cleanup_routes_task(void *pvParameter) {
     Modem* modem = (Modem*) pvParameter;
     while(true) {
-        modem->state->routing_table.cleanUpRoutes();
-        vTaskDelay(modem->persister->getConfig()->adv_period_millis / portTICK_RATE_MS);
+        modem->state->nodes.cleanUp();
+        vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }

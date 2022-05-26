@@ -1,9 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#include <stdint.h>
-
-const uint8_t SSID_SIZE = 32;
-const uint8_t PASSWORD_SIZE = 32;
+#include "constants.h"
 
 enum WiFiMode { OFF = 0, AP, STA };
 
@@ -28,7 +25,6 @@ struct ModemConfig {
     RadioConfig radio;
     NetworkConfig network;
     uint16_t address = 0;
-    uint16_t adv_period_millis = 10000;
 };
 
 class ConfigPersister {

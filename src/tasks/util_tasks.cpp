@@ -40,8 +40,8 @@ void update_display_routes_task(void* pvParameter) {
     Modem* modem = argument->modem;
     ModemDisplay* display = argument->display;
     while(1) {
-        display->updateRoutes(modem->state->routing_table.getRoutes());
-        vTaskDelay(10000 / portTICK_RATE_MS);
+        display->updateNodes(modem->state->nodes.getNodes());
+        vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }

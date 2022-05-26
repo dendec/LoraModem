@@ -2,32 +2,30 @@
 #include <stdio.h>
 #include "state.h"
 
-const uint8_t CLEAN_UP_THRESHOLD = 5;
-
-void RoutingTable::addRoute(uint16_t address, uint16_t adv_period_millis, float rssi) {
-    routing_table[address] = RoutingTableRecord{address, adv_period_millis, rssi, millis()};
+void Nodes::addNode(uint16_t address, float rssi) {
+    nodes_table[address] = Node{address, rssi, millis()};
 }
 
-RoutingTableRecord* RoutingTable::getRoute(uint16_t address) {
-    return &routing_table[address];
+Node* Nodes::getNode(uint16_t address) {
+    return &nodes_table[address];
 }
 
-std::vector<RoutingTableRecord*> RoutingTable::getRoutes() {
-    std::vector<RoutingTableRecord*> routes;
-    std::map<uint16_t, RoutingTableRecord>::iterator it;
-    for (it = routing_table.begin(); it != routing_table.end(); it++) {
-        routes.push_back(&it->second);
+std::vector<Node*> Nodes::getNodes() {
+    std::vector<Node*> nodes;
+    std::map<uint16_t, Node>::iterator it;
+    for (it = nodes_table.begin(); it != nodes_table.end(); it++) {
+        nodes.push_back(&it->second);
     }
-    return routes;
+    return nodes;
 }
 
-void RoutingTable::cleanUpRoutes() {
-    std::map<uint16_t, RoutingTableRecord>::iterator it;
+void Nodes::cleanUp() {
+    std::map<uint16_t, Node>::iterator it;
     unsigned long now = millis();
-    for (it = routing_table.begin(); it != routing_table.end(); it++) {
-        int32_t age = now - it->second.received_millis;
-        if (age > it->second.adv_period_millis * CLEAN_UP_THRESHOLD) {
-            routing_table.erase(it);
+    for (it = nodes_table.begin(); it != nodes_table.end(); it++) {
+        int32_t age = now - it->second.time;
+        if (age > ADVERTISING_PERIOD_MS * CLEAN_UP_THRESHOLD) {
+            nodes_table.erase(it);
         }
     }
 }

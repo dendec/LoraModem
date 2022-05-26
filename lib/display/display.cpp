@@ -161,18 +161,18 @@ void ModemDisplay::updateClients(uint8_t clients) {
     #endif
 }
 
-void ModemDisplay::updateRoutes(std::vector<RoutingTableRecord*> routes) {
+void ModemDisplay::updateNodes(std::vector<Node*> nodes) {
     #ifdef HAS_OLED
     clear(0, 20, width, height);
-    if (routes.size() > 0) {
-        std::vector<RoutingTableRecord*>::iterator it;
+    if (nodes.size() > 0) {
+        std::vector<Node*>::iterator it;
         char buffer[32];
         unsigned long now = millis();
         uint8_t i = 0;
-        for (it = routes.begin(); it != routes.end(); it++) {
-            int32_t age = now - (*it)->received_millis;
+        for (it = nodes.begin(); it != nodes.end(); it++) {
+            int32_t age = now - (*it)->time;
             sprintf(buffer, "%04X %.1f", (*it)->address, (*it)->rssi);
-            if ((*it)->adv_period_millis < age) {
+            if (ADVERTISING_PERIOD_MS < age) {
                 strcat(buffer, " ?");
             }
             display->drawString(0, 20 + 10*i, buffer);

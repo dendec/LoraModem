@@ -17,7 +17,7 @@ class ModemDisplay {
         void updateNetworkStat(uint32_t tx, int32_t rx);
         void updateWifiLevel(int8_t rssi);
         void updateClients(uint8_t clients);
-        void updateRoutes(std::vector<RoutingTableRecord*> routes);
+        void updateNodes(std::vector<Node*> nodes);
     private:
         void clear(int16_t x, int16_t y, int16_t w, int16_t h);
         void showWifiLevel(int8_t rssi);

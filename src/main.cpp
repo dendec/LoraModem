@@ -50,7 +50,7 @@ void setupTasks() {
     xTaskCreatePinnedToCore(&message_handler_task, "m_handler", 4096, &taskArg, 2, NULL, 1);
     xTaskCreatePinnedToCore(&blink_task, "blink", 512, NULL, 1, NULL, 1);
     xTaskCreatePinnedToCore(&modem_task, "modem", 4096, &taskArg, 3, NULL, 1);
-    xTaskCreatePinnedToCore(&send_advertisement_task, "adv", 2048, &taskArg, 1, NULL, 1);
+    xTaskCreatePinnedToCore(&send_advertising_task, "adv", 2048, &taskArg, 1, NULL, 1);
     xTaskCreatePinnedToCore(&cleanup_routes_task, "clean", 2048, modem, 1, NULL, 1);
     #ifdef HAS_OLED
     xTaskCreatePinnedToCore(&update_display_network_task, "d_net", 2048, &taskArg, 1, NULL, 1);

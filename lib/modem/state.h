@@ -3,26 +3,22 @@
 #include <Stream.h>
 #include <vector>
 #include <map>
+#include "constants.h"
 
-const uint16_t BROADCAST_ADDR = 0xFFFF;
-const size_t PACKET_SIZE = 255;
-const size_t BUFFER_SIZE = PACKET_SIZE * 10;
-
-struct RoutingTableRecord {
+struct Node {
     uint16_t address;
-    uint16_t adv_period_millis;
     float rssi;
-    uint32_t received_millis;
+    uint32_t time;
 };
 
-class RoutingTable {
+class Nodes {
     public:
-        void addRoute(uint16_t address, uint16_t adv_period_millis, float rssi);
-        RoutingTableRecord* getRoute(uint16_t address);
-        std::vector<RoutingTableRecord*> getRoutes();
-        void cleanUpRoutes();
+        void addNode(uint16_t address, float rssi);
+        Node* getNode(uint16_t address);
+        std::vector<Node*> getNodes();
+        void cleanUp();
     private:
-        std::map<uint16_t, RoutingTableRecord> routing_table;
+        std::map<uint16_t, Node> nodes_table;
 };
 
 struct Network {
@@ -34,7 +30,7 @@ struct Network {
 
 struct ModemState {
     uint16_t address_destination = BROADCAST_ADDR;
-    RoutingTable routing_table;
+    Nodes nodes;
     Network network;
     bool receiving = false;
     int64_t last_receive_time = 0;
