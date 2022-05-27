@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include "server.h"
 #include "message.h"
+#include "config.h"
 
 const char* SSID_PREFIX = "LoRaModem";
 const char* AP_HOSTNAME = "loramodem.online";
@@ -86,6 +87,15 @@ uint32_t configureWiFi(ModemConfig* config, ModemDisplay* display) {
     return 0;
 }
 
+void dns_task(void *pvParameter){
+    DNSServer* dnsServer = (DNSServer*) pvParameter;
+    while(dnsServer) {
+        dnsServer->processNextRequest();
+        vTaskDelay(10 / portTICK_RATE_MS);
+    }
+    vTaskDelete( NULL );
+}
+
 ModemServer::ModemServer(Modem* m, ModemDisplay* d, void* q): modem(m), display(d), messageQueue(q) { };
 
 void ModemServer::setup() {
@@ -99,10 +109,12 @@ void ModemServer::setup() {
     }
     ip = IPAddress(ip_num);
     modem->state->network.ip = ip_num;
-    mode = modem->persister->getConfig()->network.WIFI_mode;
+    WiFiMode mode = modem->persister->getConfig()->network.WIFI_mode;
     if (mode == AP) {
         dnsServer.start(53, "*", ip);
         server->addHandler(new AnyURLRequestHandler()).setFilter(onWrongHost);
+        xTaskCreatePinnedToCore(&dns_task, "dns", 2048, &dnsServer, 1, NULL, 0);
+        ESP_LOGI(TAG, "DNS started");
     }
     ws->onEvent([this](AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
         onEvent(server, client, type, arg, data, len);
@@ -110,7 +122,18 @@ void ModemServer::setup() {
     server->addHandler(ws);
     server->serveStatic("/", SPIFFS, "").setDefaultFile("index.html").setFilter(onValidHost);
     server->begin();
+    is_started = true;
     ESP_LOGI(TAG, "Server started");
+}
+
+uint32_t ModemServer::clients() {
+    ws->cleanupClients();
+    return ws->count();
+}
+
+
+bool ModemServer::isStarted() {
+    return is_started;
 }
 
 void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
@@ -125,7 +148,6 @@ void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client
             message.to_transmit = true;
             memcpy(message.data, data, len);
             xQueueSend(messageQueue, (void *) &message, 100);
-            //modem->setInput(data, len);
         } else {
             client->text("Too long");
         }
@@ -133,7 +155,7 @@ void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client
 }
 
 void ModemServer::send(uint32_t* id, uint8_t* data, size_t len) {
-    if (mode != OFF) {
+    if (is_started) {
         if (id == nullptr) {
             ESP_LOGD(TAG, "all:%s", (char*) data);
             ws->binaryAll(data, len);
@@ -144,25 +166,7 @@ void ModemServer::send(uint32_t* id, uint8_t* data, size_t len) {
     }
 }
 
-void ModemServer::loop() {
-    if (mode == AP) {
-        dnsServer.processNextRequest();
-    }
-}
-
-void ModemServer::serviceLoop() {
-    if (mode != OFF) {
-        ws->cleanupClients();
-        display->updateClients(ws->count());
-        if (mode == STA) {
-            int8_t rssi = WiFi.RSSI();
-            modem->state->network.rssi = rssi;
-            display->updateWifiLevel(WiFi.RSSI());
-        }
-    }
-}
-
-bool AnyURLRequestHandler::canHandle(AsyncWebServerRequest *request){
+bool AnyURLRequestHandler::canHandle(AsyncWebServerRequest *request) {
     return true;
 }
 

@@ -47,15 +47,11 @@ void setupTasks() {
         .server = server,
     };
     xTaskCreatePinnedToCore(&serial_reader_task, "serial", 2048, NULL, 2, NULL, 1);
-    xTaskCreatePinnedToCore(&message_handler_task, "m_handler", 4096, &taskArg, 2, NULL, 1);
+    xTaskCreatePinnedToCore(&message_handler_task, "handler", 4096, &taskArg, 2, NULL, 1);
     xTaskCreatePinnedToCore(&blink_task, "blink", 512, NULL, 1, NULL, 1);
     xTaskCreatePinnedToCore(&modem_task, "modem", 4096, &taskArg, 3, NULL, 1);
-    xTaskCreatePinnedToCore(&send_advertising_task, "adv", 2048, &taskArg, 1, NULL, 1);
-    xTaskCreatePinnedToCore(&cleanup_routes_task, "clean", 2048, modem, 1, NULL, 1);
-    #ifdef HAS_OLED
+    xTaskCreatePinnedToCore(&service_task, "service", 2048, &taskArg, 1, NULL, 1);
     xTaskCreatePinnedToCore(&update_display_network_task, "d_net", 2048, &taskArg, 1, NULL, 1);
-    xTaskCreatePinnedToCore(&update_display_routes_task, "d_route", 2048, &taskArg, 1, NULL, 1);
-    #endif
     #if DCORE_DEBUG_LEVEL > 3
     xTaskCreatePinnedToCore(&show_free_heap_task, "mem", 2048, NULL, 1, NULL, 1);
     #endif

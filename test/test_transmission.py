@@ -2,8 +2,8 @@ import serial
 import pytest
 import time
 
-modem0 = serial.Serial('/dev/ttyUSB0', 115200, timeout=10)
-modem1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=10)
+modem0 = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
+modem1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=2)
 
 def send(ser, data):
     ser.write(data)
@@ -44,7 +44,7 @@ def test_transmission_long_message():
 def test_transmission_by_length():
     errors_count = 0
     wrong_length_errors_count = 0
-    for length in range(0, 1000, 5):
+    for length in range(5, 1000, 5):
         payload = bytes([85] * length)
         now = time.time_ns()
         send(modem0, payload)
@@ -56,5 +56,5 @@ def test_transmission_by_length():
             errors_count += 1
             if len(actual) != len(payload):
                 wrong_length_errors_count += 1
-    print("errors {}\n".format(errors_count))
-    print("wrong_length_errors_count {}\n".format(wrong_length_errors_count))
+    print("errors {}".format(errors_count))
+    print("wrong_length_errors_count {}".format(wrong_length_errors_count))

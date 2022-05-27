@@ -7,12 +7,11 @@
 
 class ModemServer {
     public:
-        ModemServer(Modem* m, ModemDisplay* d, void* q);
+        ModemServer(Modem* m, ModemDisplay* d, void* queue);
         void setup();
-        void restart();
-        void loop();
-        void serviceLoop();
+        uint32_t clients();
         void send(uint32_t* id, uint8_t* data, size_t len);
+        bool isStarted();
     private:
         DNSServer dnsServer;
         Modem* modem;
@@ -20,7 +19,7 @@ class ModemServer {
         xQueueHandle messageQueue;
         AsyncWebServer* server = new AsyncWebServer(80);
         AsyncWebSocket* ws =  new AsyncWebSocket("/ws");
-        WiFiMode mode = OFF;
+        bool is_started = false;
         void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 };
 

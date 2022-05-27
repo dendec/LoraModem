@@ -24,10 +24,11 @@ void show_free_heap_task(void *pvParameter) {
 }
 
 void update_display_network_task(void* pvParameter) {
+    // todo add semaphore
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     ModemDisplay* display = argument->display;
-    while(1) {
+    while(display) {
         Network* network = &modem->state->network;
         display->updateNetworkStat(network->transmit, network->receive);
         vTaskDelay(1000 / portTICK_RATE_MS);
@@ -35,12 +36,44 @@ void update_display_network_task(void* pvParameter) {
     vTaskDelete( NULL );
 }
 
-void update_display_routes_task(void* pvParameter) {
+/**
+ * This utility task runs only if modem in receive mode, 
+ * nothing is going to be transmitted 
+ * and last data packet was received quite long time ago. 
+ * It does following actions:
+ * - update number of connected web-clients on display;
+ * - update Wi-Fi signal level on display;
+ * - update Wi-Fi signal level in modem network state;
+ * - send service packet which allows to discover node;
+ * - clean up list of discovered nodes;
+ * - update list of discovered nodes on display.
+ */
+void service_task(void *pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     ModemDisplay* display = argument->display;
-    while(1) {
-        display->updateNodes(modem->state->nodes.getNodes());
+    ModemServer* server = argument->server;
+    extern QueueHandle_t queue;
+    while(true) {
+        if (
+            modem->state->receiving && 
+            millis() - modem->state->last_receive_time > ADVERTISING_PERIOD_MS && 
+            uxQueueMessagesWaiting(queue) == 0
+        ) {
+            uint32_t clients = 0;
+            if (server->isStarted()) {
+                clients = server->clients();
+            }
+            int8_t rssi = WiFi.RSSI();
+            modem->state->network.rssi = rssi;
+            modem->transmitAdvertisingPacket();
+            modem->state->nodes.cleanUp();
+            #ifdef HAS_OLED
+            display->updateWifiLevel(WiFi.RSSI());
+            display->updateClients(clients);
+            display->updateNodes(modem->state->nodes.getNodes());
+            #endif
+        }
         vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );

@@ -4,8 +4,4 @@
 
 void modem_task(void *pvParameter);
 
-void send_advertising_task(void *pvParameter);
-
-void cleanup_routes_task(void *pvParameter);
-
 #endif

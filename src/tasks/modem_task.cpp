@@ -1,4 +1,4 @@
-#include "modem_tasks.h"
+#include "modem_task.h"
 #include "message.h"
 #include "tasks_arguments.h"
 
@@ -20,10 +20,7 @@ void modem_task(void *pvParameter) {
                 memcpy(&packet, buffer, len);
                 if (packet.dst == modem->persister->getConfig()->address || packet.dst == BROADCAST_ADDR) {
                     uint8_t payload_len = len - SERVICE_SIZE;
-                    if (payload_len == 0 && packet.dst == BROADCAST_ADDR) {
-                        ESP_LOGI(TAG, "Received adv packet from %04X", packet.address);
-                        modem->state->nodes.addNode(packet.src, modem->radio->getRSSI());
-                    }
+                    modem->state->nodes.addNode(packet.src, modem->radio->getRSSI());
                     if (payload_len > 0) {
                         modem->state->network.receive += payload_len;
                         modem->state->last_receive_time = millis();
@@ -43,29 +40,4 @@ void modem_task(void *pvParameter) {
         }
         modem->receive();
     }
-}
-
-void send_advertising_task(void *pvParameter) {
-    volatile TaskArg* argument = (TaskArg*) pvParameter;
-    Modem* modem = argument->modem;
-    while(true) {
-        if (
-            modem->state->receiving && 
-            millis() - modem->state->last_receive_time > ADVERTISING_PERIOD_MS && 
-            uxQueueMessagesWaiting(queue) == 0
-        ) {
-            modem->transmitAdvertisingPacket();
-        }
-        vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
-    }
-    vTaskDelete( NULL );
-}
-
-void cleanup_routes_task(void *pvParameter) {
-    Modem* modem = (Modem*) pvParameter;
-    while(true) {
-        modem->state->nodes.cleanUp();
-        vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
-    }
-    vTaskDelete( NULL );
 }
