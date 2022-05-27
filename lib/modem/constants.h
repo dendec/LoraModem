@@ -6,7 +6,7 @@
 const uint8_t SSID_SIZE = 32;
 const uint8_t PASSWORD_SIZE = 32;
 
-const uint16_t ADVERTISING_PERIOD_MS = 10000;
+const uint16_t SERVICE_PERIOD_MS = 10000;
 const uint8_t CLEAN_UP_THRESHOLD = 5;
 
 const uint16_t BROADCAST_ADDR = 0xFFFF;

@@ -171,7 +171,7 @@ void ModemDisplay::updateNodes(std::vector<Node*> nodes) {
         for (auto it = nodes.begin(); it != nodes.end(); it++) {
             int32_t age = now - (*it)->time;
             sprintf(buffer, "%04X %.1f", (*it)->address, (*it)->rssi);
-            if (ADVERTISING_PERIOD_MS < age) {
+            if (SERVICE_PERIOD_MS < age) {
                 strcat(buffer, " ?");
             }
             display->drawString(0, 20 + 10*i, buffer);

@@ -22,7 +22,7 @@ void Nodes::cleanUp() {
     unsigned long now = millis();
     for (auto it = nodes_table.begin(); it != nodes_table.end(); ++it) {
         int32_t age = now - it->second.time;
-        if (age > ADVERTISING_PERIOD_MS * CLEAN_UP_THRESHOLD) {
+        if (age > SERVICE_PERIOD_MS * CLEAN_UP_THRESHOLD) {
             nodes_table.erase(it);
         }
     }

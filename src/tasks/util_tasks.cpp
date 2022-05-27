@@ -57,7 +57,7 @@ void service_task(void *pvParameter) {
     while(true) {
         if (
             modem->state->receiving && 
-            millis() - modem->state->last_receive_time > ADVERTISING_PERIOD_MS && 
+            millis() - modem->state->last_receive_time > SERVICE_PERIOD_MS && 
             uxQueueMessagesWaiting(queue) == 0
         ) {
             uint32_t clients = 0;
@@ -74,7 +74,7 @@ void service_task(void *pvParameter) {
             display->updateNodes(modem->state->nodes.getNodes());
             #endif
         }
-        vTaskDelay(ADVERTISING_PERIOD_MS / portTICK_RATE_MS);
+        vTaskDelay(SERVICE_PERIOD_MS / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }
