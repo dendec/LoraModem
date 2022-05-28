@@ -3,7 +3,7 @@ import serial
 import time
 import pytest
 
-ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.5)
+ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 
 def send(data):
     ser.write(data)
@@ -53,9 +53,11 @@ def test_AT_FREQ():
     assert_equals(send_command(b'AT+FREQ\n'), '434.0')
 
 def test_AT_FREQ_set():
-    assert_ok(send_command(b'AT+FREQ=433.0\n'))
-    assert_equals(send_command(b'AT+FREQ\n'), '433.0')
-    assert_equals(send_command(b'AT+CONF\n')[5:], "433.0,500.0,9,7,10,0")
+    for freq in range(410, 525, 5):
+        assert_ok(send_command(f"AT+FREQ={freq:.1f}\n".encode()))
+        assert_equals(send_command(b'AT+FREQ\n'), f"{freq:.1f}")
+        assert_equals(send_command(b'AT+CONF\n')[5:], f"{freq:.1f},500.0,9,7,10,0")
+        print(freq)
     assert_ok(send_command(b'ATZ\n'))
 
 def test_AT_FREQ_set_wrong():
@@ -67,9 +69,11 @@ def test_AT_BANDWIDTH():
     assert_equals(send_command(b'AT+BW\n'), '500.0')
 
 def test_AT_BANDWIDTH_set():
-    assert_ok(send_command(b'AT+BW=250.0\n'))
-    assert_equals(send_command(b'AT+BW\n'), '250.0')
-    assert_equals(send_command(b'AT+CONF\n')[5:], "434.0,250.0,9,7,10,0")
+    for bw in [62.5, 125.0, 250.0, 500.0]:
+        assert_ok(send_command(f"AT+BW={bw:.1f}\n".encode()))
+        assert_equals(send_command(b'AT+BW\n'), f"{bw:.1f}")
+        assert_equals(send_command(b'AT+CONF\n')[5:], f"434.0,{bw:.1f},9,7,10,0")
+        print(bw)
     assert_ok(send_command(b'ATZ\n'))
 
 def test_AT_BANDWIDTH_set_wrong():
@@ -81,24 +85,27 @@ def test_AT_SFACTOR():
     assert_equals(send_command(b'AT+SF\n'), '9')
 
 def test_AT_SFACTOR_set():
-    assert_ok(send_command(b'AT+SF=7\n'))
-    assert_equals(send_command(b'AT+SF\n'), '7')
-    assert_equals(send_command(b'AT+CONF\n')[5:], "434.0,500.0,7,7,10,0")
+    for sf in range(7, 13, 1):
+        assert_ok(send_command(f"AT+SF={sf}\n".encode()))
+        assert_equals(send_command(b'AT+SF\n'), f"{sf}")
+        assert_equals(send_command(b'AT+CONF\n')[5:], f"434.0,500.0,{sf},7,10,0")
+        print(sf)
     assert_ok(send_command(b'ATZ\n'))
 
 def test_AT_SFACTOR_set_wrong():
-    assert_equals(send_command(b'AT+SF=0\n'), 'Invalid spread factor. Valid values: 6, 7, 8, 9, 10, 11, 12')
-    assert_equals(send_command(b'AT+SF=4\n'), 'Invalid spread factor. Valid values: 6, 7, 8, 9, 10, 11, 12')
-    assert_equals(send_command(b'AT+SF=-5\n'), 'Invalid spread factor. Valid values: 6, 7, 8, 9, 10, 11, 12')
-
+    assert_equals(send_command(b'AT+SF=0\n'), 'Invalid spread factor. Valid values: 7, 8, 9, 10, 11, 12')
+    assert_equals(send_command(b'AT+SF=4\n'), 'Invalid spread factor. Valid values: 7, 8, 9, 10, 11, 12')
+    assert_equals(send_command(b'AT+SF=-5\n'), 'Invalid spread factor. Valid values: 7, 8, 9, 10, 11, 12')
 
 def test_AT_RATE():
     assert_equals(send_command(b'AT+RATE\n'), '7')
 
 def test_AT_RATE_set():
-    assert_ok(send_command(b'AT+RATE=5\n'))
-    assert_equals(send_command(b'AT+RATE\n'), '5')
-    assert_equals(send_command(b'AT+CONF\n')[5:], "434.0,500.0,9,5,10,0")
+    for r in range(5, 9, 1):
+        assert_ok(send_command(f"AT+RATE={r}\n".encode()))
+        assert_equals(send_command(b'AT+RATE\n'), f"{r}")
+        assert_equals(send_command(b'AT+CONF\n')[5:], f"434.0,500.0,9,{r},10,0")
+        print(r)
     assert_ok(send_command(b'ATZ\n'))
 
 def test_AT_RATE_set_wrong():
@@ -110,15 +117,17 @@ def test_AT_POWER():
     assert_equals(send_command(b'AT+POW\n'), '10')
 
 def test_AT_POWER_set():
-    assert_ok(send_command(b'AT+POW=7\n'))
-    assert_equals(send_command(b'AT+POW\n'), '7')
-    assert_equals(send_command(b'AT+CONF\n')[5:], "434.0,500.0,9,7,7,0")
+    for p in range(2, 18, 1):
+        assert_ok(send_command(f"AT+POW={p}\n".encode()))
+        assert_equals(send_command(b'AT+POW\n'), f"{p}")
+        assert_equals(send_command(b'AT+CONF\n')[5:], f"434.0,500.0,9,7,{p},0")
+        print(p)
     assert_ok(send_command(b'ATZ\n'))
 
 def test_AT_POWER_set_wrong():
-    assert_equals(send_command(b'AT+POW=-10\n'), 'Invalid power. Valid values: -3-17')
-    assert_equals(send_command(b'AT+POW=18\n'), 'Invalid power. Valid values: -3-17')
-    assert_equals(send_command(b'AT+POW=30\n'), 'Invalid power. Valid values: -3-17')
+    assert_equals(send_command(b'AT+POW=-10\n'), 'Invalid power. Valid values: 2-17,20')
+    assert_equals(send_command(b'AT+POW=18\n'), 'Invalid power. Valid values: 2-17,20')
+    assert_equals(send_command(b'AT+POW=30\n'), 'Invalid power. Valid values: 2-17,20')
 
 @pytest.mark.skip(reason="can have unpredicted value")
 def test_AT_SCAN():
@@ -140,7 +149,7 @@ def test_AT_WIFI():
 
 def test_AT_STAT():
     send_command(b'AT+RST\n')
-    time.sleep(1)
+    ser.read(size=256)
     assert_equals(send_command(b'AT+STAT\n'), '0,0')
     send(b'test123')
     time.sleep(0.2)

@@ -2,8 +2,8 @@ import serial
 import pytest
 import time
 
-modem0 = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
-modem1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=2)
+modem0 = serial.Serial('/dev/ttyUSB0', 115200, timeout=60)
+modem1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=60)
 
 def send(ser, data):
     ser.write(data)
@@ -30,13 +30,14 @@ def test_transmission_allchars():
     assert_equals(actual, payload)
 
 def test_transmission_long_message():
-    payload = bytes( [85] * 1024 )
+    length = 1000
+    payload = bytes( [85] * length )
     now = time.time_ns()
     send(modem0, payload)
-    actual = receive(modem1, 1024)
+    actual = receive(modem1, length)
     latency = (time.time_ns() - now) / 1e9
-    bitrate = 1024 / latency
-    print("\n{}, {}, {}".format(1024, latency, bitrate))
+    bitrate = length / latency
+    print("\n{}, {}, {}".format(length, latency, bitrate))
     assert_equals(len(actual), len(payload))
     assert_equals(actual, payload)
 

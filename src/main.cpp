@@ -13,6 +13,7 @@ ModemServer* server;
 
 QueueHandle_t queue;
 SemaphoreHandle_t modem_semaphore;
+SemaphoreHandle_t txrx_semaphore;
 
 void setupSerial() {
     Serial.begin(SERIAL_SPEED);
@@ -48,7 +49,7 @@ void setupTasks() {
     };
     xTaskCreatePinnedToCore(&serial_reader_task, "serial", 2048, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(&message_handler_task, "handler", 4096, &taskArg, 2, NULL, 1);
-    xTaskCreatePinnedToCore(&blink_task, "blink", 512, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(&blink_task, "blink", 1024, NULL, 1, NULL, 1);
     xTaskCreatePinnedToCore(&modem_task, "modem", 4096, &taskArg, 3, NULL, 1);
     xTaskCreatePinnedToCore(&service_task, "service", 2048, &taskArg, 1, NULL, 1);
     xTaskCreatePinnedToCore(&update_display_network_task, "d_net", 2048, &taskArg, 1, NULL, 1);
@@ -58,8 +59,9 @@ void setupTasks() {
 }
 
 void setup() {
-    queue = xQueueCreate(10, sizeof(Message));
+    queue = xQueueCreate(16, sizeof(Message));
     modem_semaphore = xSemaphoreCreateBinary();
+    txrx_semaphore = xSemaphoreCreateBinary();
     setupSerial();
     setupDisplay();
     setupModem();

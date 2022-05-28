@@ -2,13 +2,13 @@
 #include "message.h"
 #include "tasks_arguments.h"
 
-extern SemaphoreHandle_t modem_semaphore;
-extern QueueHandle_t queue;
-
 void modem_task(void *pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     uint8_t buffer[SX127X_MAX_PACKET_LENGTH];
+    extern SemaphoreHandle_t modem_semaphore;
+    extern SemaphoreHandle_t txrx_semaphore;
+    extern QueueHandle_t queue;
     while(true) {
         xSemaphoreTake( modem_semaphore, portMAX_DELAY );
         if (modem->state->receiving) {
@@ -29,7 +29,7 @@ void modem_task(void *pvParameter) {
                         message.len = payload_len;
                         message.to_transmit = false;
                         memcpy(message.data, packet.payload, payload_len);
-                        xQueueSend(queue, (void *) &message, 100 / portTICK_RATE_MS);
+                        xQueueSend(queue, (void *) &message, portMAX_DELAY);
                     }
                 }
             } else {
@@ -39,5 +39,6 @@ void modem_task(void *pvParameter) {
             ESP_LOGD(TAG, "Transmitted");
         }
         modem->receive();
+        xSemaphoreGive(txrx_semaphore);
     }
 }

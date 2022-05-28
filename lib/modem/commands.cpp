@@ -221,7 +221,7 @@ ExecutionResult CommandSfactor::executeAssign(char* buffer) {
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
-        error("spread factor", "6, 7, 8, 9, 10, 11, 12", buffer);
+        error("spread factor", "7, 8, 9, 10, 11, 12", buffer);
         return EXECUTED;
     }
 }
@@ -254,12 +254,12 @@ ExecutionResult CommandCodeRate::executeQuery(char* buffer) {
 CommandPower::CommandPower(ModemConfig* config): AssignableCommand<int>("AT+POW"), config(config) {}
 
 ExecutionResult CommandPower::executeAssign(char* buffer) {
-    if (((argument >= -3) && (argument <= 17)) || (argument == 20)) {
+    if (((argument >= 2) && (argument <= 17)) || (argument == 20)) {
         config->radio.power = argument;
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
-        error("power", "-3-17", buffer);
+        error("power", "2-17,20", buffer);
         return EXECUTED;
     }
 }

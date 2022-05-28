@@ -18,7 +18,7 @@ void serial_reader_task(void *pvParameter)
             message.client_id = NULL;
             message.len = Serial.readBytes(message.data, PAYLOAD_SIZE);
             message.to_transmit = true;
-            xQueueSend(queue, (void *) &message, 10 / portTICK_RATE_MS);
+            xQueueSend(queue, (void *) &message, portMAX_DELAY);
         }
         vTaskDelayUntil( &lastWakeTime, ( 3 / portTICK_RATE_MS ) ); // 1/115200*250*1000
 	}
@@ -63,7 +63,7 @@ void message_handler_task(void *pvParameter)
     while(true)
 	{
         Message message;
-        if (xQueuePeek(queue, (void *) &message, 10 / portTICK_RATE_MS)) {
+        if (xQueuePeek(queue, (void *) &message, portMAX_DELAY)) {
             boolean is_transmitted = true;
             if (message.to_transmit) {
                 is_transmitted &= execute_or_transmit(server, executor, modem, &message);
@@ -71,7 +71,7 @@ void message_handler_task(void *pvParameter)
                 send_to_clients(server, message.client_id, message.data, message.len);
             }
             if(is_transmitted) {
-                xQueueReceive(queue, (void *) &message, 10 / portTICK_RATE_MS);
+                xQueueReceive(queue, (void *) &message, 0);
             }
         }
 	}

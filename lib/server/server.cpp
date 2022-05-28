@@ -113,7 +113,7 @@ void ModemServer::setup() {
     if (mode == AP) {
         dnsServer.start(53, "*", ip);
         server->addHandler(new AnyURLRequestHandler()).setFilter(onWrongHost);
-        xTaskCreatePinnedToCore(&dns_task, "dns", 2048, &dnsServer, 1, NULL, 0);
+        xTaskCreatePinnedToCore(&dns_task, "dns", 2048, &dnsServer, 3, NULL, 0);
         ESP_LOGI(TAG, "DNS started");
     }
     ws->onEvent([this](AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len) {
@@ -157,10 +157,10 @@ void ModemServer::onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client
 void ModemServer::send(uint32_t* id, uint8_t* data, size_t len) {
     if (is_started) {
         if (id == nullptr) {
-            ESP_LOGD(TAG, "all:%s", (char*) data);
+            ESP_LOGV(TAG, "all:%s", (char*) data);
             ws->binaryAll(data, len);
         } else {
-            ESP_LOGD(TAG, "%u:%s", *id, (char*) data);
+            ESP_LOGV(TAG, "%u:%s", *id, (char*) data);
             ws->binary(*id, data, len);
         }
     }

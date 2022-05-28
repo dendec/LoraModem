@@ -28,10 +28,11 @@ void update_display_network_task(void* pvParameter) {
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     ModemDisplay* display = argument->display;
+    extern SemaphoreHandle_t txrx_semaphore;
     while(display) {
+        xSemaphoreTake( txrx_semaphore, portMAX_DELAY );
         Network* network = &modem->state->network;
         display->updateNetworkStat(network->transmit, network->receive);
-        vTaskDelay(1000 / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }
