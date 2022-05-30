@@ -82,7 +82,7 @@ class CommandFreq: public AssignableCommand<float> {
         ModemConfig* config;
 };
 
-class CommandBandwidth: public AssignableCommand<float> {
+class CommandBandwidth: public AssignableCommand<int> {
     public:
         CommandBandwidth(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);

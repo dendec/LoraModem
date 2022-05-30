@@ -160,9 +160,9 @@ ExecutionResult CommandRestart::execute(char* buffer) {
 CommandConfig::CommandConfig(ModemConfig* config): Command("AT+CONF"), config(config) {}
 
 ExecutionResult CommandConfig::execute(char* buffer) {
-    sprintf(buffer, "%04X,%.1f,%.1f,%u,%u,%u,%u\n",
-        config->address, config->radio.frequency, config->radio.bandwidth, 
-        config->radio.sfactor, config->radio.coding_rate, config->radio.power, config->radio.gain);
+    sprintf(buffer, "%04X,%.1f,%d,%u,%u,%u,%u\n",
+        config->address, config->radio.frequency, (int)config->radio.bandwidth, 
+        config->radio.sfactor, config->radio.coding_rate, config->radio.power, config->radio.crc);
     return EXECUTED;
 }
 
@@ -194,17 +194,26 @@ ExecutionResult CommandFreq::executeQuery(char* buffer) {
 }
 
 // AT+BW
-CommandBandwidth::CommandBandwidth(ModemConfig* config): AssignableCommand<float>("AT+BW"), config(config) {}
+CommandBandwidth::CommandBandwidth(ModemConfig* config): AssignableCommand<int>("AT+BW"), config(config) {}
 
 ExecutionResult CommandBandwidth::executeAssign(char* buffer) {
-    if (argument == 500.0 || argument == 250.0 || argument == 125.0 || argument == 62.5) {
-        config->radio.bandwidth = argument;
-        ok(buffer);
-        return EXECUTED_UPDATED;
-    } else {
-        error("bandwidth", "62.5, 125.0, 250.0, 500.0", buffer);
-        return EXECUTED;
+    float bw;
+    switch (argument)  {
+        case 7: bw = 7.8; break;
+        case 10: bw = 10.4; break;
+        case 15: bw = 15.6; break;
+        case 20: bw = 20.8; break;
+        case 31: bw = 31.25; break;
+        case 41: bw = 41.7; break;
+        case 62: bw = 62.5; break;
+        case 125: bw = 125.0; break;
+        case 250: bw = 250.0; break;
+        case 500: bw = 500.0; break;
+        default: error("bandwidth", "7, 10, 15, 20, 31, 41, 62, 125, 250, 500", buffer); return EXECUTED;
     }
+    config->radio.bandwidth = bw;
+    ok(buffer);
+    return EXECUTED_UPDATED;
 }
 
 ExecutionResult CommandBandwidth::executeQuery(char* buffer) {
@@ -221,7 +230,7 @@ ExecutionResult CommandSfactor::executeAssign(char* buffer) {
         ok(buffer);
         return EXECUTED_UPDATED;
     } else {
-        error("spread factor", "7, 8, 9, 10, 11, 12", buffer);
+        error("spread factor", "6, 7, 8, 9, 10, 11, 12", buffer);
         return EXECUTED;
     }
 }

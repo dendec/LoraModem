@@ -10,8 +10,7 @@ struct RadioConfig {
     uint8_t sfactor;
     uint8_t coding_rate;
     int8_t power;
-    uint16_t preamble;
-    uint8_t gain;
+    bool crc;
 };
 
 struct NetworkConfig {

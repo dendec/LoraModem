@@ -15,13 +15,22 @@ void modem_task(void *pvParameter) {
             int16_t result = modem->radio->readData(buffer, SX127X_MAX_PACKET_LENGTH);
             if (result == ERR_NONE) {
                 size_t len = modem->radio->getPacketLength();
-                ESP_LOGD(TAG, "Received %d bytes", len);
                 Packet packet = {};
                 memcpy(&packet, buffer, len);
                 if (packet.dst == modem->persister->getConfig()->address || packet.dst == BROADCAST_ADDR) {
-                    uint8_t payload_len = len - SERVICE_SIZE;
+                    uint8_t payload_len = 0;
+                    if (modem->isImplicitHeader()) {
+                        payload_len = PAYLOAD_SIZE;
+                        while (payload_len > 0 && packet.payload[payload_len - 1] == 0) {
+                            payload_len --;
+                        }
+                    } else {
+                        payload_len = len - SERVICE_SIZE;
+                    }
                     modem->state->nodes.addNode(packet.src, modem->radio->getRSSI());
                     if (payload_len > 0) {
+                        ESP_LOGD(TAG, "Received %d bytes", payload_len);
+                        ESP_LOGV(TAG, "Received %s", (char*)packet.payload);
                         modem->state->network.receive += payload_len;
                         modem->state->last_receive_time = millis();
                         Message message;
@@ -30,6 +39,8 @@ void modem_task(void *pvParameter) {
                         message.to_transmit = false;
                         memcpy(message.data, packet.payload, payload_len);
                         xQueueSend(queue, (void *) &message, portMAX_DELAY);
+                    } else {
+                        ESP_LOGD(TAG, "Received service packet from %04X", packet.src);
                     }
                 }
             } else {

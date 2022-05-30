@@ -10,7 +10,7 @@ const uint16_t SERVICE_PERIOD_MS = 10000;
 const uint8_t CLEAN_UP_THRESHOLD = 5;
 
 const uint16_t BROADCAST_ADDR = 0xFFFF;
-const size_t PACKET_SIZE = 255;
+const size_t PACKET_SIZE = 255; // SX127X_MAX_PACKET_LENGTH
 const size_t SERVICE_SIZE = sizeof(uint16_t) * 2;
 const size_t PAYLOAD_SIZE = PACKET_SIZE - SERVICE_SIZE - 1;
 

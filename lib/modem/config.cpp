@@ -19,7 +19,7 @@ ModemConfig* ConfigPersister::getConfig() {
         EEPROM.get(1, *config);
         ESP_LOGI(TAG, "Config loaded");
     } else {
-        config->radio = RadioConfig{434.0, 500.0, 9, 7, 10, 8, 0};
+        config->radio = RadioConfig{434.0, 500.0, 9, 7, 10, false};
         config->network = NetworkConfig{{}, {}, AP, 1};
         byte mac[6];
         WiFi.macAddress(mac);

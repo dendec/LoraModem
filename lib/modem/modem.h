@@ -21,6 +21,7 @@ class Modem {
         void transmitAdvertisingPacket();
         void reset();
         void receive();
+        bool isImplicitHeader();
         ModemState* state;
         ConfigPersister* persister;
         SX1278* radio;
