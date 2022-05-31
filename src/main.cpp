@@ -68,6 +68,7 @@ void setup() {
     setupServer();
     setupTasks();
     ESP_LOGI(TAG, "Setup completed");
+    vTaskDelete(NULL);
 }
 
 void loop() {}
