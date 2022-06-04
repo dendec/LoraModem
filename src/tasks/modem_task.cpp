@@ -53,3 +53,20 @@ void modem_task(void *pvParameter) {
         xSemaphoreGive(txrx_semaphore);
     }
 }
+
+void advertising_task(void *pvParameter) {
+    volatile TaskArg* argument = (TaskArg*) pvParameter;
+    Modem* modem = argument->modem;
+    extern QueueHandle_t queue;
+    while(modem->persister->getConfig()->advertising_ms > 0) {
+        if (
+            modem->state->receiving && 
+            millis() - modem->state->last_receive_time > 1000 && 
+            uxQueueMessagesWaiting(queue) == 0
+        ) {
+            modem->transmitAdvertisingPacket();
+        }
+        vTaskDelay(modem->persister->getConfig()->advertising_ms / portTICK_RATE_MS);
+    }
+    vTaskDelete( NULL );
+}

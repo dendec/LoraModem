@@ -77,7 +77,7 @@ void modemISR(void) {
 
 void Modem::transmit(uint8_t* data, size_t len) {
     state->receiving = false;
-    ESP_LOGV(TAG, "%s", (char*)data);
+    ESP_LOGV(TAG, "%d %s", len, (char*)data);
     radio->setDio0Action(modemISR);
     int16_t result = radio->startTransmit(data, len);
     if (result != ERR_NONE) {

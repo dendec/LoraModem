@@ -24,6 +24,7 @@ struct ModemConfig {
     RadioConfig radio;
     NetworkConfig network;
     uint16_t address = 0;
+    uint16_t advertising_ms = DEFAULT_ADV_PERIOD_MS;
 };
 
 class ConfigPersister {

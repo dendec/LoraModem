@@ -9,4 +9,8 @@ void update_display_network_task(void *pvParameter);
 
 void service_task(void *pvParameter);
 
+void display_task(void *pvParameter);
+
+void test_emitter_task(void *pvParameter);
+
 #endif
