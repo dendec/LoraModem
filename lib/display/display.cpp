@@ -49,7 +49,7 @@ void ModemDisplay::apInfo(const char* ssid) {
     display->drawString(0, 0, message);
     showNetworkStat(0, 0);
     showClients(0);
-    display->display();
+    is_updated = false;
     #else
     Serial.println(message);
     #endif
@@ -65,7 +65,7 @@ void ModemDisplay::staInfo(String ip, int8_t rssi) {
     showWifiLevel(rssi);
     showNetworkStat(0, 0);
     showClients(0);
-    display->display();
+    is_updated = false;
     #else
     Serial.println(message);
     #endif
@@ -91,7 +91,7 @@ void ModemDisplay::updateWifiLevel(int8_t rssi) {
     if (rssi < -100) {
         clear(width - 6, 3, 6, 7);
     }
-    display->display();
+    is_updated = false;
     #endif
 }
 
@@ -130,12 +130,11 @@ void ModemDisplay::updateNetworkStat(uint32_t tx, int32_t rx) {
     ESP_LOGV(TAG, "tx: %u", tx);
     clear(6, 12, 42, 7);
     display->drawString(6, 9, buffer);
-    display->display();
     convertBytes(buffer, rx);
     ESP_LOGV(TAG, "rx: %u", rx);
     clear(54, 12, 42, 7);
     display->drawString(54, 9, buffer);
-    display->display();
+    is_updated = false;
     #endif
 }
 
@@ -157,7 +156,7 @@ void ModemDisplay::updateClients(uint8_t clients) {
         sprintf(buffer, "%1d", clients);
     }
     display->drawString(width - 7, 9, buffer);
-    display->display();
+    is_updated = false;
     #endif
 }
 
@@ -171,13 +170,13 @@ void ModemDisplay::updateNodes(std::vector<Node*> nodes) {
         for (auto it = nodes.begin(); it != nodes.end(); it++) {
             int32_t age = now - (*it)->time;
             sprintf(buffer, "%04X %.1f", (*it)->address, (*it)->rssi);
-            if (SERVICE_PERIOD_MS < age) {
+            if (DEFAULT_ADV_PERIOD_MS < age) {
                 strcat(buffer, " ?");
             }
             display->drawString(0, 20 + 10*i, buffer);
         }
     }
-    display->display();
+    is_updated = false;
     #endif
 }
 
@@ -187,7 +186,7 @@ void ModemDisplay::message(const char* string) {
     display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
     display->drawString(width / 2, height / 2, string);
     display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->display();
+    is_updated = false;
     #else
     Serial.println(string);
     #endif
@@ -196,7 +195,7 @@ void ModemDisplay::message(const char* string) {
 void ModemDisplay::progress(uint8_t percent) {
     #ifdef HAS_OLED
     display->drawProgressBar(0, height - 9, width-1, 8, percent);
-    display->display();
+    is_updated = false;
     #endif
 }
 
@@ -205,6 +204,25 @@ void ModemDisplay::clear(int16_t x, int16_t y, int16_t w, int16_t h) {
     display->setColor(BLACK);
     display->fillRect(x, y, w, h);
     display->setColor(WHITE);
-    display->display();
+    is_updated = false;
+    #endif
+}
+
+void ModemDisplay::showMode(uint8_t mode) {
+    #ifdef HAS_OLED
+    char message[9];
+    clear(0, 54, 60, 10);
+    sprintf(message, "mode: %d", mode);
+    display->drawString(0, 54, message);
+    is_updated = false;
+    #endif
+}
+
+void ModemDisplay::update() {
+    #ifdef HAS_OLED
+    if (!is_updated) {
+        display->display();
+        is_updated = true;
+    }
     #endif
 }

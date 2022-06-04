@@ -18,6 +18,8 @@ class ModemDisplay {
         void updateWifiLevel(int8_t rssi);
         void updateClients(uint8_t clients);
         void updateNodes(std::vector<Node*> nodes);
+        void showMode(uint8_t mode);
+        void update();
     private:
         void clear(int16_t x, int16_t y, int16_t w, int16_t h);
         void showWifiLevel(int8_t rssi);
@@ -26,6 +28,7 @@ class ModemDisplay {
         uint8_t reset_pin;
         uint8_t width;
         uint8_t height;
+        bool is_updated = false;
 };
 
 #endif
