@@ -259,6 +259,45 @@ ExecutionResult CommandCodeRate::executeQuery(char* buffer) {
     return EXECUTED;
 }
 
+// AT+MODE
+CommandMode::CommandMode(ModemConfig* config): AssignableCommand<int>("AT+MODE"), config(config) {}
+
+ExecutionResult CommandMode::executeAssign(char* buffer) {
+    if (argument >= 0 && argument <= 27) {
+        config->radio.coding_rate = argument % 4 + 5;
+        config->radio.sfactor = (argument - argument % 4) / 4 + 6;
+        ok(buffer);
+        return EXECUTED_UPDATED;
+    } else {
+        error("mode", "0-27", buffer);
+        return EXECUTED;
+    }
+}
+
+ExecutionResult CommandMode::executeQuery(char* buffer) {
+    AssignableCommand::returnValue(config->radio.coding_rate + (config->radio.sfactor - 6)*4 -5, buffer);
+    return EXECUTED;
+}
+
+// AT+ADV
+CommandAdvertising::CommandAdvertising(ModemConfig* config): AssignableCommand<int>("AT+ADV"), config(config) {}
+
+ExecutionResult CommandAdvertising::executeAssign(char* buffer) {
+    if (argument >= 0 && argument <= 60000) {
+        config->advertising_ms = argument;
+        ok(buffer);
+        return EXECUTED_UPDATED;
+    } else {
+        error("advertising period", "0-60000", buffer);
+        return EXECUTED;
+    }
+}
+
+ExecutionResult CommandAdvertising::executeQuery(char* buffer) {
+    AssignableCommand::returnValue(config->advertising_ms, buffer);
+    return EXECUTED;
+}
+
 // AT+POW
 CommandPower::CommandPower(ModemConfig* config): AssignableCommand<int>("AT+POW"), config(config) {}
 
@@ -382,6 +421,8 @@ CommandExecutor::CommandExecutor(Modem* modem) {
     commands[11] = new CommandRestart();
     commands[12] = new CommandStat(state);
     commands[13] = new CommandIP(state);
+    commands[14] = new CommandMode(config);
+    commands[15] = new CommandAdvertising(config);
 }
 
 CommandExecutor::~CommandExecutor() {

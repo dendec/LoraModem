@@ -1,6 +1,6 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
-#define COMMANDS_COUNT 14
+#define COMMANDS_COUNT 16
 #include "modem.h"
 
 enum ExecutionResult { NOT_EXECUTED, EXECUTED, EXECUTED_UPDATED };
@@ -25,9 +25,9 @@ class AssignableCommand: public Command {
         ~AssignableCommand();
         bool parse(char* buffer, size_t len);
         ExecutionResult execute(char* buffer) final;
+        T argument;
     protected:
         bool is_assign = false;
-        T argument;
         uint8_t argument_size;
         virtual ExecutionResult executeAssign(char* buffer) = 0;
         virtual ExecutionResult executeQuery(char* buffer) = 0;
@@ -103,6 +103,24 @@ class CommandSfactor: public AssignableCommand<int> {
 class CommandCodeRate: public AssignableCommand<int> {
     public:
         CommandCodeRate(ModemConfig* config);
+        ExecutionResult executeAssign(char* buffer);
+        ExecutionResult executeQuery(char* buffer);
+    private:
+        ModemConfig* config;
+};
+
+class CommandMode: public AssignableCommand<int> {
+    public:
+        CommandMode(ModemConfig* config);
+        ExecutionResult executeAssign(char* buffer);
+        ExecutionResult executeQuery(char* buffer);
+    private:
+        ModemConfig* config;
+};
+
+class CommandAdvertising: public AssignableCommand<int> {
+    public:
+        CommandAdvertising(ModemConfig* config);
         ExecutionResult executeAssign(char* buffer);
         ExecutionResult executeQuery(char* buffer);
     private:
