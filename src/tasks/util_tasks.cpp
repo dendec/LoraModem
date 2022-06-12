@@ -24,7 +24,6 @@ void show_free_heap_task(void *pvParameter) {
 }
 
 void update_display_network_task(void* pvParameter) {
-    // todo add semaphore
     volatile TaskArg* argument = (TaskArg*) pvParameter;
     Modem* modem = argument->modem;
     ModemDisplay* display = argument->display;
