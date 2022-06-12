@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "npm run build-web && npm run build-embedded",
     "build-web": "vue-cli-service build",
-    "build-embedded": "rm -f ../data/* && vue-cli-service build --mode embedded --dest ../data && rm ../data/*.js*",
+    "build-embedded": "rm -f ../data/* && vue-cli-service build --mode embedded --dest ../data && rm ../data/*.js* ../data/index.html",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

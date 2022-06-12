@@ -82,8 +82,8 @@
                     </select> /4</li>
                 <li><span>accept files:</span> <input v-model="acceptFiles" type="checkbox" @change="acceptFilesChange()"></li>
             </ul>
-            <h3>WiFi</h3>
-            <!-- <ul>
+            <!--<h3>WiFi</h3>
+             <ul>
                 <li><span>Mode:</span>
                     <select v-model="wifi.mode">
                         <option value="0">OFF</option>
@@ -97,7 +97,7 @@
                 <li><span>Pass:</span>
                     <input type="password" minlength="8" v-model="wifi.password">
                 </li>
-            </ul> -->
+            </ul>
             <form>
                 <label>Mode:
                     <select v-model="wifi.mode">
@@ -113,7 +113,7 @@
                     <input type="password" minlength="8" v-model="wifi.password">
                 </label>
                 <button type="submit" id="apply-button" @click="applyWifiSettings">Apply</button>
-            </form>
+            </form>-->
             <h3>Nodes</h3>
             <ul id="nodes-list">
                 <li v-for="node in nodes" :key="node.id" v-bind:item="node" 

@@ -6,4 +6,6 @@ void modem_task(void *pvParameter);
 
 void advertising_task(void *pvParameter);
 
+void test_emitter_task(void *pvParameter);
+
 #endif

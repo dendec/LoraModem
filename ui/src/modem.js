@@ -436,7 +436,7 @@ class LoRaModem extends EventTarget {
             }
 
             function parseConf(response) {
-                return parseCsvObject(response, ['addr', 'freq', 'bw', 'sf', 'cr', 'pow', 'crc']);
+                return parseCsvObject(response, ['addr', 'freq', 'bw', 'sf', 'cr', 'pow']);
             }
 
             function parseStat(response) {

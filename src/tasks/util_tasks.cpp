@@ -79,24 +79,3 @@ void display_task(void *pvParameter) {
     }
     vTaskDelete( NULL );
 }
-
-void test_emitter_task(void *pvParameter) {
-    volatile TaskArg* argument = (TaskArg*) pvParameter;
-    Modem* modem = argument->modem;
-    extern SemaphoreHandle_t modem_semaphore;
-    uint8_t cr = 0;
-    uint8_t sf = 0;
-    modem->transmitAdvertisingPacket();
-    ModemConfig* config = modem->persister->getConfig();
-    while(true) {
-        xSemaphoreTake( modem_semaphore, portMAX_DELAY );
-        config->radio.coding_rate = cr++ % 4 + 5;
-        if (cr % 4 == 0) {
-            config->radio.sfactor = sf++ % 7 + 6;
-        }
-        modem->setup();
-        ESP_LOGI(TAG, "cr: %u, sf %u", config->radio.coding_rate, config->radio.sfactor );
-        modem->transmitAdvertisingPacket();
-    }
-    vTaskDelete( NULL );
-}
