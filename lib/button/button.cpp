@@ -19,7 +19,7 @@ Button::~Button() {
 void Button::begin() {
     pinMode(GPIO_NUM_0, INPUT_PULLUP);
     attachInterrupt(GPIO_NUM_0, button_ISR, CHANGE);
-    xTaskCreate(runTask, "gpioISRTask", 2048, this, 5, &taskHandle);
+    xTaskCreatePinnedToCore(button_task, "button", 2048, this, 1, &taskHandle, 1);
 }
 
 void Button::onPressed(OnButtonActionPerformed callback) {
@@ -38,7 +38,7 @@ uint32_t Button::millis() {
     return xTaskGetTickCount() * portTICK_PERIOD_MS;
 }
 
-void Button::runTask(void* arg) {
+void Button::button_task(void* arg) {
     Button* mui = (Button*)arg;
 
     int readLevel;

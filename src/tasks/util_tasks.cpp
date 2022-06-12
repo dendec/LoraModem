@@ -66,7 +66,7 @@ void service_task(void *pvParameter) {
         display->updateClients(clients);
         display->updateNodes(modem->state->nodes.getNodes());
         #endif
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(500 / portTICK_RATE_MS);
     }
     vTaskDelete( NULL );
 }

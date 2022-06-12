@@ -19,7 +19,7 @@ public:
     void onLongPressed(OnButtonActionPerformed callback);
 
 private:
-    static void runTask(void* arg);
+    static void button_task(void* arg);
     uint32_t millis();
 
     OnButtonActionPerformed pressedCallback = nullptr;

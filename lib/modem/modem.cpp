@@ -24,7 +24,7 @@ void Modem::setup() {
     } else {
         radio->explicitHeader();
     }
-    radio->setCRC(persister->getConfig()->radio.crc);
+    radio->setCRC(false);
     if (err != ERR_NONE) {
         ESP_LOGE(TAG, "LoRa initialization failed. code: %d", err);
         persister->reset();

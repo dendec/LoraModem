@@ -160,9 +160,9 @@ ExecutionResult CommandRestart::execute(char* buffer) {
 CommandConfig::CommandConfig(ModemConfig* config): Command("AT+CONF"), config(config) {}
 
 ExecutionResult CommandConfig::execute(char* buffer) {
-    sprintf(buffer, "%04X,%.1f,%d,%u,%u,%u,%u\n",
+    sprintf(buffer, "%04X,%.1f,%d,%u,%u,%u\n",
         config->address, config->radio.frequency, (int)config->radio.bandwidth, 
-        config->radio.sfactor, config->radio.coding_rate, config->radio.power, config->radio.crc);
+        config->radio.sfactor, config->radio.coding_rate, config->radio.power);
     return EXECUTED;
 }
 

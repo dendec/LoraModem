@@ -53,8 +53,9 @@ void setupTasks() {
     xTaskCreatePinnedToCore(&serial_reader_task, "serial", 2048, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(&message_handler_task, "handler", 4096, &taskArg, 2, NULL, 1);
     xTaskCreatePinnedToCore(&blink_task, "blink", 1024, NULL, 1, NULL, 1);
-    #if TEST_EMITTER
+    #ifdef TEST_EMITTER
     xTaskCreatePinnedToCore(&test_emitter_task, "emitter", 4096, &taskArg, 3, NULL, 1);
+    display->message("EMITTER");
     #else
     xTaskCreatePinnedToCore(&modem_task, "modem", 4096, &taskArg, 3, NULL, 1);
     xTaskCreatePinnedToCore(&service_task, "service", 2048, &taskArg, 1, NULL, 1);
