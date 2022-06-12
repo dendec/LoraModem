@@ -85,7 +85,6 @@ export default {
 .message-time {
     font-size: 12px;
     padding: 5px;
-    text-align: right;
 }
 .message-text {
     white-space: pre-line;
@@ -97,8 +96,10 @@ export default {
     width: 80%;
     overflow-wrap: break-word;
     background-color: var(--message-color);
+    text-align: left;
 }
 .message-box.received {
     margin-left: 18.5%;
+    text-align: right;
 }
 </style>

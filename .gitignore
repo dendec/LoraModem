@@ -7,6 +7,7 @@
 data/
 data/index.html
 build/
+ui/dist
 ui/node_modules/
 ui/package-lock.json
 test/**/*
