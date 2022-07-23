@@ -9,7 +9,8 @@ Firmware is based on Arduino framework and widely used RTOS capabilities for tas
  * [Operational Principles](#operational-principles)
  * [Usage](#usage)
  * [Contribution](#contribution)
- * [Future Plans]()
+ * [Future Plans](#future-plans)
+ * [License](#license)
 
 ## Getting Started
 
@@ -21,9 +22,9 @@ pip install -U platformio
 ```
 make
 ```
-By default expecting that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](master/platformio.ini).
+By default expecting that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](include/platformio.ini).
 
-This project was developed on [Heltec WiFi LoRa 32 (V2.1)](https://heltec.org/product/wifi-lora-32-v2/) platform. It can be adjusted for usage with another similar hardware, please refer to [config.h](master/include/config.h) to adjust pinout for your specific case.
+This project was developed on [Heltec WiFi LoRa 32 (V2.1)](https://heltec.org/product/wifi-lora-32-v2/) platform. It can be adjusted for usage with another similar hardware, please refer to [config.h](include/config.h) to adjust pinout for your specific case.
 
 ## Operational Principles
 Data for transmission can be entered using serial connection or websocket connection.
@@ -40,7 +41,7 @@ If incoming packet destination coinsides with modem address, then payload of mes
 
 ## Usage
 
-This modem is configured with AT-commands. Please refer to commands description for full list of available commands.
+This modem is configured with AT-commands. Please refer to [commands description](docs/commands.md) for full list of available commands.
 
 Wi-Fi module can be in following states:
 * OFF - disabled;
@@ -54,7 +55,7 @@ In STA mode modem should be configured with valid Wi-Fi credentials and web-inte
 
 It is possible to transfer files using protocols XMODEM, YMODEM, ZMODEM with any existing software implementing these. Web-interface allow to send files as well.
 
-## Development
+## Contribution
 
 Your contributions are always welcome!
 
@@ -74,5 +75,5 @@ pip install -r dependencies.txt
 
 ## Future Plans
 
-## License
+## [License](LICENSE.md)
 MIT © [Denis Dechev](https://github.com/dendec)
