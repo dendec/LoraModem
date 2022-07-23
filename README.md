@@ -9,7 +9,7 @@ Firmware is based on Arduino framework and widely used RTOS capabilities for tas
  * [Operational Principles](#operational-principles)
  * [Usage](#usage)
  * [Contribution](#contribution)
- * [Future Plans](#future-plans)
+ * [Roadmap](#roadmap)
  * [License](#license)
 
 ## Getting Started
@@ -18,11 +18,11 @@ LoRa Modem uses the [PlatformIO](https://platformio.org/) development environmen
 ```
 pip install -U platformio
 ```
-[Makefile](master/Makefile) allows to build and flash firmware and user interface. It is possible to build whole project and flash device by command:
+[Makefile](Makefile) allows to build and flash firmware and user interface. It is possible to build whole project and flash device by command:
 ```
 make
 ```
-By default expecting that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](include/platformio.ini).
+By default expecting that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](platformio.ini).
 
 This project was developed on [Heltec WiFi LoRa 32 (V2.1)](https://heltec.org/product/wifi-lora-32-v2/) platform. It can be adjusted for usage with another similar hardware, please refer to [config.h](include/config.h) to adjust pinout for your specific case.
 
@@ -73,7 +73,15 @@ Dependencies for running tests can be installed with:
 pip install -r dependencies.txt
 ```
 
-## Future Plans
+## Roadmap
+- [ ] Power consumption optimisations;
+- [ ] Add access via BLE interface;
+- [ ] Simple BLE client;
+- [ ] Voice transmission with low bit rate speech codec;
+- [ ] Encription;
+- [ ] FSK and OOK modulations mode;
+- [ ] Frequency band scanning mode;
+- [ ] Multi-language Support.
 
 ## [License](LICENSE.md)
 MIT © [Denis Dechev](https://github.com/dendec)
