@@ -23,7 +23,7 @@ pip install -U platformio
 ```
 make
 ```
-By default expecting that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](platformio.ini).
+By default it is expected that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](platformio.ini).
 
 ## Hardware
 
@@ -40,9 +40,9 @@ Every modem has its ows address which is lastest 16-bits of module's Wi-Fi mac a
 
 Every LoRa packet consist from source and destination addresses and payload. Payload can be up to 250 bytes size.
 
-Modem sends periodically advertisements packets which shows that it is ready for communications. Addition to it, modem continuously listens for incoming packets. 
+Modem periodically sends advertising packets which shows that it is ready for communications. Addition to it, modem continuously listens for incoming packets. 
 
-If incoming packet destination coinsides with modem address, then payload of message sends to the modem clients, otherwise it is ignored. If incoming packet is advertisement, then its source is added into list of known nodes. 
+If incoming packet destination coinsides with modem address, then payload of message sends to the modem clients, otherwise it is ignored. If incoming packet is advertising, then its source is added into list of known nodes. 
 
 ## Usage
 
