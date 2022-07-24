@@ -43,6 +43,8 @@ If incoming packet destination coinsides with modem address, then payload of mes
 
 This modem is configured with AT-commands. Please refer to [commands description](docs/commands.md) for full list of available commands.
 
+Also device can swith its radio operation [mode](docs/commands.md#atmode) by short pressing of GPIO0(prog) button. Long press of this button resets modem to default settings. 
+
 Wi-Fi module can be in following states:
 * OFF - disabled;
 * AP - access point mode;
