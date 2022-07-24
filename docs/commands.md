@@ -6,7 +6,7 @@ Every AT command should be terminated by line feed (`\n`)  character and send at
 | `AT` | Modem availability check | `OK` |
 | `ATZ` | Reset all settings to default values | `OK` |
 | `AT+RST` | Rebooting the radio and CPU |  |
-| [`AT+CONF`](#atconf) | Display all radio settings | `1234,434.0,500.0,9,7,10,0` |
+| [`AT+CONF`](#atconf) | Display all radio settings | `1234,434.0,500.0,9,7,10` |
 | `AT+ADDR` | Getting address | `1234` |
 | `AT+FREQ` | Getting frequency in MHz | `434.0` |
 | `AT+FREQ=<x>` | Setting frequency in MHz. Valid values: 410.0 – 525.0 | `OK/ERROR` |
@@ -34,14 +34,13 @@ Some commands require more detailed explanation:
 
 ### `AT+CONF`
 
-Displays all radio settings in following order: address, frequency, channel width, spreading factor, code rate, power, gain. 
+Displays all radio settings in following order: address, frequency, channel width, spreading factor, code rate, power. 
 - Address is hexadecimal integer equals to last 16 bits of module's Wi-Fi MAC address. 
 - Frequency is a float value equals to base frequency in MHz. 
 - Channel width is a float value equals to bandwiths in kHz.
 - Spreading factor is an integer number. Modulation parameter which reflects chirp duration. Large spreading factors offer low data rates but gives higher communication distance.
 - Code rate is an integer number. Reflects amount of redundancy added to payload. If there are too many interference in the channel, then it’s recommended to increase the value of CR. However, the rise in CR value will also increase the duration for the transmission.
 - Power is integer number. Shows transmitter output power in dBm.
-- Gain is a binary value. Shows if automatic gain control enabled.
 
 **Important note:** frequency, bandwidth, code rate and spreading factor have to be the same for both communication sides.
 

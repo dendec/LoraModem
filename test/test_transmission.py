@@ -1,11 +1,12 @@
 import serial
 import pytest
+import random
 import time
 from test_common import send, send_command, assert_equals
 from os.path import exists
 
-modem0 = serial.Serial('/dev/ttyUSB0', 115200, timeout=3)
-modem1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=3)
+modem0 = serial.Serial('/dev/ttyUSB0', 115200, timeout=10)
+modem1 = serial.Serial('/dev/ttyUSB1', 115200, timeout=10)
 
 def send(ser, data):
     ser.write(data)
@@ -33,14 +34,13 @@ def test_transmission_long_message():
     assert len_ok
     assert msg_ok
 
-#@pytest.mark.skip(reason="can take a lot of time")
+@pytest.mark.skip(reason="takes a lot of time")
 def test_transmission_by_length():
-    for sf in [6]: #range(6, 13, 1):
+    for sf in range(6, 13, 1):
         set_SF(sf)
-        for rate in [5]: #range(5, 9, 1):
+        for rate in range(5, 9, 1):
             set_RATE(rate)
             for bw in [500, 250, 125, 62, 41, 31, 20, 15, 10, 7]:
-            #for bw in [500, 250, 125, 62]:
                 set_BW(bw)
                 conf = send_command(modem0, b'AT+CONF\n')
                 print("\n{}".format(conf))
@@ -50,14 +50,14 @@ def test_transmission_by_length():
                 f = open(f"{conf}.csv", "w")
                 f.write(f"length, latency, bitrate, len_ok, msg_ok\n")
                 failures = 0
-                for length in range(1, 501, 1):
+                for length in range(1, 251, 1):
                     latency, bitrate, msg_ok, len_ok = transmit(length)
                     print(f"{length}, {latency}, {bitrate}, {len_ok}, {msg_ok}")
-                    while not msg_ok and failures < 5:
+                    while not msg_ok and failures < 10:
                         latency, bitrate, msg_ok, len_ok = transmit(length)
                         print(f"{length}, {latency}, {bitrate}, {len_ok}, {msg_ok}")
                         failures = failures + 1
-                    if failures == 5:
+                    if failures == 10:
                         break
                     else:
                         failures = 0
@@ -65,7 +65,7 @@ def test_transmission_by_length():
                 f.close()
 
 def transmit(length):
-    payload = bytes( [85] * length )
+    payload = bytes( random.sample(list(range(1, 256))*length, length) )
     now = time.time_ns()
     send(modem0, payload)
     actual = modem1.read(length)

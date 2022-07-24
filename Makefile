@@ -17,3 +17,6 @@ flash-ui:
 
 flash-firmware:
 	pio run --target upload --environment heltec_wifi_lora_32_V2
+
+run-test:
+	pytest test/test_commands.py
