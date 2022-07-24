@@ -92,4 +92,5 @@ pip install -r dependencies.txt
 
 ## [License](LICENSE.md)
 MIT © [Denis Dechev](https://github.com/dendec)
+
 Development was done as part of diploma project for [Odessa I.I.Mechnikov National University](http://onu.edu.ua/en/).
