@@ -2,10 +2,11 @@
 
 LoRa Modem is a project that lets you use inexpensive LoRa radios as radio modem. It allows access via serial port and/or via Wi-Fi websocket connection. Supports configuration with AT-commands and contains simple web-interface onboard.
 
-Firmware is based on Arduino framework and widely used RTOS capabilities for tasks management. ESP32 is used as core microcontroller and SX1278 for LoRa radio. Web-interface is based on Vue.js.
+Firmware is based on Arduino framework and widely used RTOS capabilities for tasks management. Web-interface is based on Vue.js.
 
 ## Table of Contents
  * [Getting Started](#getting-started)
+ * [Hardware](#hardware)
  * [Operational Principles](#operational-principles)
  * [Usage](#usage)
  * [Contribution](#contribution)
@@ -24,7 +25,11 @@ make
 ```
 By default expecting that device listens for `/dev/ttyUSB0` serial port. If device listens another serial please adjust [platformio.ini](platformio.ini).
 
-This project was developed on [Heltec WiFi LoRa 32 (V2.1)](https://heltec.org/product/wifi-lora-32-v2/) platform. It can be adjusted for usage with another similar hardware, please refer to [config.h](include/config.h) to adjust pinout for your specific case.
+## Hardware
+
+It uses ESP32 as core microcontroller and SX1278 for LoRa radio. It is possible to use any conbination of modules based on ESP32 and SX1278 but custom build requires pinout adjustment. Please refer to [config.h](include/config.h) for this. 
+
+By default project build is configured for [Heltec WiFi LoRa 32 (V2.1)](https://heltec.org/product/wifi-lora-32-v2/) platform. 
 
 ## Operational Principles
 Data for transmission can be entered using serial connection or websocket connection.
@@ -43,7 +48,7 @@ If incoming packet destination coinsides with modem address, then payload of mes
 
 This modem is configured with AT-commands. Please refer to [commands description](docs/commands.md) for full list of available commands.
 
-Also device can swith its radio operation [mode](docs/commands.md#atmode) by short pressing of GPIO0(prog) button. Long press of this button resets modem to default settings. 
+Also device can switch its radio operation [mode](docs/commands.md#atmode) by short pressing of GPIO0(prog) button. Long press of this button resets modem to default settings. 
 
 Wi-Fi module can be in following states:
 * OFF - disabled;
@@ -55,7 +60,7 @@ In AP mode modem creates an access point. All clients can access web-interface o
 
 In STA mode modem should be configured with valid Wi-Fi credentials and web-interface can be accessed directly via IP address.
 
-It is possible to transfer files using protocols XMODEM, YMODEM, ZMODEM with any existing software implementing these. Web-interface allow to send files as well.
+It is possible to transfer files using protocols XMODEM, YMODEM, ZMODEM with any existing software implementing these. Web-interface allows to send files as well.
 
 ## Contribution
 
@@ -87,3 +92,4 @@ pip install -r dependencies.txt
 
 ## [License](LICENSE.md)
 MIT © [Denis Dechev](https://github.com/dendec)
+Development was done as part of diploma project for [Odessa I.I.Mechnikov National University](http://onu.edu.ua/en/).
